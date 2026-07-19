@@ -1,0 +1,335 @@
+/* Mock test mode: intro / test / result phases, plus the mock history table.
+   Reuses the CSS custom properties defined in global.css. */
+
+.mock-intro,
+.mock-test,
+.mock-result,
+.mock-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mock-rules-card ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.mock-rules-card li {
+  margin: 0.35rem 0;
+}
+
+.mock-past-best {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.mock-history-link {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Test header / countdown                                                */
+/* ---------------------------------------------------------------------- */
+
+.mock-test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+  padding: 0.5rem 0;
+}
+
+.mock-section-label {
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.mock-countdown {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem 0.75rem;
+  min-width: 4.5rem;
+  text-align: center;
+}
+
+.mock-countdown-bad {
+  color: var(--bad);
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Question card                                                          */
+/* ---------------------------------------------------------------------- */
+
+.mock-question-number {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.mock-question-text {
+  font-size: 1.3rem;
+  line-height: 1.9;
+  margin: 0 0 1rem;
+}
+
+.mock-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mock-choice {
+  text-align: left;
+  font-size: 1.1rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+}
+
+.mock-choice-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Ordering (文の組み立て) */
+
+.mock-ordering-slots {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.mock-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding: 0 0.4rem;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+}
+
+.mock-slot-star {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mock-hint {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* Passage (文章の文法) */
+
+.mock-passage-title {
+  margin: 0 0 0.75rem;
+}
+
+.mock-passage-paragraph {
+  font-size: 1.15rem;
+  line-height: 2;
+  margin: 0 0 0.75rem;
+}
+
+.mock-gap-marker {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0 0.15rem;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Navigation / jump strip                                                */
+/* ---------------------------------------------------------------------- */
+
+.mock-nav {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.mock-jump-strip {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.mock-jump-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.mock-jump-btn {
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.mock-jump-btn-answered {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.mock-jump-btn-current {
+  border-color: var(--accent);
+  border-width: 2px;
+  font-weight: 700;
+}
+
+.mock-jump-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mock-submit-confirm {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: rgba(217, 168, 63, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Result phase                                                           */
+/* ---------------------------------------------------------------------- */
+
+.mock-result h1 {
+  font-size: 2.5rem;
+}
+
+.mock-breakdown-table,
+.mock-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mock-breakdown-table th,
+.mock-breakdown-table td,
+.mock-table th,
+.mock-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.mock-guidance {
+  color: var(--text-dim);
+}
+
+.mock-review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mock-review-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  background: var(--bg-raised);
+}
+
+.mock-review-correct {
+  border-left: 4px solid var(--ok);
+}
+
+.mock-review-wrong {
+  border-left: 4px solid var(--bad);
+}
+
+.mock-review-question {
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.mock-review-number {
+  color: var(--text-dim);
+}
+
+.mock-review-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.mock-review-explanation {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0 0 0.4rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mock history table                                                     */
+/* ---------------------------------------------------------------------- */
+
+.mock-table-wrap {
+  overflow-x: auto;
+}
+
+.mock-results-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Responsive down to 360px                                               */
+/* ---------------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .mock-question-text {
+    font-size: 1.1rem;
+  }
+
+  .mock-passage-paragraph {
+    font-size: 1rem;
+  }
+
+  .mock-result h1 {
+    font-size: 2rem;
+  }
+
+  .mock-jump-grid {
+    grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
+  }
+
+  .mock-nav {
+    flex-wrap: wrap;
+  }
+}

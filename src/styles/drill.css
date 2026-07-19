@@ -1,0 +1,149 @@
+.drill-setup h2 {
+  font-size: 1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.drill-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.drill-tab {
+  border-radius: 999px;
+  padding: 0.35rem 1.1rem;
+}
+
+.drill-tab-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.drill-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+.drill-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.drill-option:has(input:checked) {
+  color: var(--text);
+}
+
+.drill-start {
+  margin-top: 1.5rem;
+}
+
+.drill-stats {
+  margin-top: 1.5rem;
+}
+
+.drill-stats table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.drill-stats th,
+.drill-stats td {
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drill-progress {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.drill-question {
+  text-align: center;
+  padding: 2rem 1.25rem;
+}
+
+.drill-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.drill-word {
+  font-size: 2rem;
+}
+
+.drill-gloss {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.drill-target {
+  font-size: 1.1rem;
+  margin: 1rem 0;
+}
+
+.drill-feedback {
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.drill-fb-ok {
+  background: var(--ok-soft);
+}
+
+.drill-fb-bad {
+  background: var(--bad-soft);
+}
+
+.drill-expected {
+  font-size: 1.3rem;
+}
+
+.drill-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.drill-summary {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.drill-summary li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.drill-row-ok > span:first-child {
+  color: var(--ok);
+}
+
+.drill-row-bad > span:first-child {
+  color: var(--bad);
+}
+
+.drill-form {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.drill-actions {
+  display: flex;
+  gap: 0.75rem;
+}

@@ -1,20 +1,32 @@
 // Session queue building: which exercises a practice/review session shows.
 
-import { exercisesByPointId } from "../content";
+import { allTemplates, allVocab, exercisesByPointId } from "../content";
 import type { Exercise } from "../content/types";
+import { generateForPoint } from "./generator";
 import { type Rng, shuffle } from "./rng";
 
 export const PRACTICE_SESSION_SIZE = 10;
 export const REVIEW_EXERCISES_PER_POINT = 3;
 
-/** Shuffled bank exercises for one grammar point, capped at `count`. */
+/**
+ * Exercises for one grammar point: shuffled bank first, topped up with
+ * template-generated exercises when the bank alone can't fill `count`.
+ */
 export function buildPracticeQueue(
   pointId: string,
   count: number,
   rng: Rng,
 ): Exercise[] {
-  const bank = exercisesByPointId.get(pointId) ?? [];
-  return shuffle(bank, rng).slice(0, count);
+  const bank = shuffle(exercisesByPointId.get(pointId) ?? [], rng);
+  if (bank.length >= count) return bank.slice(0, count);
+  const generated = generateForPoint(
+    pointId,
+    allTemplates,
+    allVocab,
+    rng,
+    count - bank.length,
+  );
+  return [...bank, ...generated];
 }
 
 /**

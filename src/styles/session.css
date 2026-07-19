@@ -1,0 +1,327 @@
+/* Exercise-session UI: practice & review sessions share this stylesheet. */
+
+.session-runner {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.session-title {
+  text-align: center;
+}
+
+.session-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.session-progress-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.session-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exercise-prompt {
+  font-size: 1.4rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.exercise-hint {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.exercise-translation {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Answer input */
+
+.answer-input {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.answer-input input[type="text"] {
+  flex: 1 1 200px;
+  font-size: 1.2rem;
+}
+
+/* Cloze */
+
+.cloze-sentence {
+  font-size: 1.5rem;
+}
+
+.cloze-gap {
+  display: inline-block;
+  min-width: 2.5em;
+  padding: 0 0.2em;
+  margin: 0 0.15em;
+  text-align: center;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  font-weight: 700;
+}
+
+/* MCQ */
+
+.mcq-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.mcq-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+}
+
+.mcq-choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Ordering */
+
+.ordering-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ordering-answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0.6rem;
+  background: var(--bg-inset);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.ordering-placeholder {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.ordering-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ordering-chip {
+  font-size: 1.15rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.ordering-chip-placed {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ordering-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Feedback panel */
+
+.feedback-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.feedback-correct {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.feedback-incorrect {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.feedback-status {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.feedback-correct .feedback-status {
+  color: var(--ok);
+}
+
+.feedback-incorrect .feedback-status {
+  color: var(--bad);
+}
+
+.feedback-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.feedback-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.feedback-answer {
+  font-size: 1.25rem;
+}
+
+.feedback-alt-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.feedback-explanation {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.feedback-lesson-link {
+  align-self: flex-start;
+  font-weight: 600;
+}
+
+.feedback-next {
+  align-self: flex-end;
+}
+
+/* Summary */
+
+.session-summary {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.session-score {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.session-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.session-summary-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--bg-inset);
+}
+
+.summary-mark {
+  font-weight: 700;
+  width: 1.2em;
+  flex-shrink: 0;
+}
+
+.summary-correct .summary-mark {
+  color: var(--ok);
+}
+
+.summary-incorrect .summary-mark {
+  color: var(--bad);
+}
+
+.summary-prompt {
+  color: var(--text-dim);
+}
+
+/* Empty state (review) */
+
+.session-empty {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .mcq-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-prompt,
+  .cloze-sentence {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .answer-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feedback-next {
+    align-self: stretch;
+  }
+}

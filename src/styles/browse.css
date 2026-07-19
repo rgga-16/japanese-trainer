@@ -1,0 +1,583 @@
+/* Browse/dashboard UI: Dashboard, LessonBrowser, LessonDetail, Settings.
+   Class prefixes: dash- (Dashboard), browse- (LessonBrowser + shared bits,
+   incl. MasteryBadge), lesson- (LessonDetail + LessonProse), settings-
+   (Settings). Reuses custom properties from styles/global.css. */
+
+:root {
+  --warn-soft: rgba(217, 168, 63, 0.14);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Shared button-styled links                                              */
+/* ---------------------------------------------------------------------- */
+
+.browse-btn {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 0.55rem 1.1rem;
+  text-decoration: none;
+  text-align: center;
+}
+
+.browse-btn:hover {
+  border-color: var(--accent);
+}
+
+.browse-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.browse-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+/* ---------------------------------------------------------------------- */
+/* MasteryBadge                                                            */
+/* ---------------------------------------------------------------------- */
+
+.browse-mastery-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.browse-mastery-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.browse-mastery-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border);
+  display: inline-block;
+}
+
+.browse-mastery-badge-new {
+  color: var(--text-dim);
+  background: var(--bg-inset);
+}
+
+.browse-mastery-badge-learning {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.browse-mastery-badge-learning .browse-mastery-dot-filled {
+  background: var(--accent);
+}
+
+.browse-mastery-badge-strong {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: var(--warn);
+}
+.browse-mastery-badge-strong .browse-mastery-dot-filled {
+  background: var(--warn);
+}
+
+.browse-mastery-badge-mastered {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: var(--ok);
+}
+.browse-mastery-badge-mastered .browse-mastery-dot-filled {
+  background: var(--ok);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Dashboard                                                                */
+/* ---------------------------------------------------------------------- */
+
+.dash-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dash-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.dash-welcome h2 {
+  margin: 0;
+}
+
+.dash-cta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.dash-cta-due {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dash-cta-count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.dash-cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dash-cta-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.dash-cta-clear .dash-cta-title {
+  color: var(--ok);
+}
+
+.dash-cta-sub {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.dash-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dash-stat-wide {
+  grid-column: span 1;
+}
+
+.dash-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.dash-stat-label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.dash-gauge {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.dash-gauge-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.dash-section h2 {
+  margin-top: 0;
+}
+
+.dash-empty {
+  color: var(--text-dim);
+}
+
+.dash-weakest,
+.dash-mocks {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.dash-weakest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-weakest-row:last-child {
+  border-bottom: none;
+}
+
+.dash-weakest-row:hover {
+  background: var(--bg-inset);
+}
+
+.dash-weakest-acc {
+  color: var(--bad);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.dash-mock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-mock-row:last-child {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* LessonBrowser                                                            */
+/* ---------------------------------------------------------------------- */
+
+.browse-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.browse-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.browse-tab {
+  background: transparent;
+}
+
+.browse-tab-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.browse-group {
+  margin-top: 1rem;
+}
+
+.browse-group h2 {
+  margin-top: 0;
+}
+
+.browse-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.browse-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.browse-row:last-child {
+  border-bottom: none;
+}
+
+.browse-row:hover {
+  background: var(--bg-inset);
+}
+
+.browse-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.browse-row-title {
+  font-weight: 600;
+}
+
+.browse-row-meaning {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* LessonDetail + LessonProse                                              */
+/* ---------------------------------------------------------------------- */
+
+.lesson-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lesson-back {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.9rem;
+  align-self: flex-start;
+}
+
+.lesson-back:hover {
+  color: var(--accent);
+}
+
+.lesson-title {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.lesson-meaning {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+}
+
+.lesson-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lesson-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.lesson-accuracy {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.lesson-formation ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-formation li {
+  font-family: var(--font-jp);
+  margin-bottom: 0.4rem;
+  line-height: 1.5;
+}
+
+.lesson-formation li:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-section h2 {
+  margin-top: 0;
+}
+
+.lesson-prose p {
+  margin: 0 0 1rem;
+}
+
+.lesson-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-prose-list {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.lesson-prose-list:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-prose-list li {
+  margin-bottom: 0.35rem;
+}
+
+.lesson-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.lesson-example {
+  padding: 0.75rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.lesson-example-ja {
+  font-size: 1.05rem;
+}
+
+.lesson-example-en {
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+}
+
+.lesson-related {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lesson-related-link {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  background: var(--bg-raised);
+}
+
+.lesson-related-link:hover {
+  border-color: var(--accent);
+}
+
+.lesson-notfound {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.lesson-practice-bar {
+  position: sticky;
+  bottom: 0;
+  margin: 1rem -1.25rem -4rem;
+  padding: 0.9rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+
+.lesson-practice-bar .browse-btn {
+  width: 100%;
+  max-width: 360px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Settings                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.settings-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-card h2 {
+  margin: 0;
+}
+
+.settings-hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.settings-sample {
+  margin-left: 0.5rem;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.settings-file-input {
+  display: none;
+}
+
+.settings-reset-btn:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.settings-reset-armed {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.settings-msg-ok {
+  margin: 0;
+  color: var(--ok);
+}
+
+.settings-msg-error {
+  margin: 0;
+  color: var(--bad);
+}
+
+.settings-about {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Narrow viewports                                                         */
+/* ---------------------------------------------------------------------- */
+
+@media (max-width: 360px) {
+  .lesson-title {
+    font-size: 1.5rem;
+  }
+
+  .dash-cta-count {
+    font-size: 2rem;
+  }
+
+  .lesson-practice-bar {
+    margin: 1rem -1.25rem -4rem;
+  }
+}
