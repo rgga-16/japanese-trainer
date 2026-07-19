@@ -1,0 +1,188 @@
+:root {
+  --bg: #10141c;
+  --bg-raised: #1a2130;
+  --bg-inset: #0b0e14;
+  --border: #2a3347;
+  --text: #e8ecf4;
+  --text-dim: #97a3b8;
+  --accent: #e8556d;
+  --accent-soft: rgba(232, 85, 109, 0.14);
+  --ok: #4fc38a;
+  --ok-soft: rgba(79, 195, 138, 0.14);
+  --bad: #e06c5b;
+  --bad-soft: rgba(224, 108, 91, 0.14);
+  --warn: #d9a83f;
+  --radius: 10px;
+  --font-jp: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI",
+    "Yu Gothic", Meiryo, sans-serif;
+  --font-ui: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.app-logo {
+  font-family: var(--font-jp);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.app-logo-sub {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-left: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--bg-inset);
+}
+
+.nav-link-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+/* Japanese text + furigana */
+.jp {
+  font-family: var(--font-jp);
+}
+
+ruby rt {
+  font-size: 0.55em;
+  color: var(--text-dim);
+}
+
+.furigana-hidden rt {
+  visibility: hidden;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover {
+  filter: brightness(1.1);
+}
+
+input[type="text"],
+select {
+  font: inherit;
+  font-family: var(--font-jp);
+  background: var(--bg-inset);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+}
+
+input[type="text"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
