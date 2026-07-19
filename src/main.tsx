@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
+import { AppStateProvider } from "./state/AppStateContext";
 import "./styles/global.css";
 import ConjugationDrill from "./views/ConjugationDrill";
 import Dashboard from "./views/Dashboard";
@@ -35,7 +36,9 @@ const rootEl = document.getElementById("root");
 if (rootEl) {
   createRoot(rootEl).render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <AppStateProvider>
+        <RouterProvider router={router} />
+      </AppStateProvider>
     </StrictMode>,
   );
 }
