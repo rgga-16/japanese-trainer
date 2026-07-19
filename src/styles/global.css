@@ -182,7 +182,9 @@ input[type="text"]:focus {
 
 @media (prefers-reduced-motion: reduce) {
   * {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat any component rule */
     animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat any component rule */
     transition: none !important;
   }
 }
