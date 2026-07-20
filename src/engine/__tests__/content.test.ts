@@ -333,11 +333,11 @@ describe("mock passages", () => {
 // ---------------------------------------------------------------------------
 
 describe("content volume sanity check", () => {
-  it("has all 18 seed grammar points", () => {
-    expect(allGrammarPoints.length).toBe(18);
+  it("has all 51 grammar points (18 seed + 33 batch 1)", () => {
+    expect(allGrammarPoints.length).toBe(51);
   });
 
-  it("has 7 bank exercises per seed grammar point (126 total)", () => {
-    expect(allExercises.length).toBe(126);
+  it("has 7 bank exercises per grammar point (357 total)", () => {
+    expect(allExercises.length).toBe(357);
   });
 });
