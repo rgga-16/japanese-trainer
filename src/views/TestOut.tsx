@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import SessionRunner, {
   type SessionOutcome,
 } from "../components/SessionRunner";
@@ -11,22 +11,24 @@ import {
 } from "../components/sessionPersistence";
 import { grammarPointById } from "../content";
 import type { Exercise } from "../content/types";
-import { buildPracticeQueue, PRACTICE_SESSION_SIZE } from "../engine/queue";
+import { buildPracticeQueue } from "../engine/queue";
 import { mulberry32 } from "../engine/rng";
 import { useAppState } from "../state/AppStateContext";
+
+const TESTOUT_SIZE = 6;
+const TESTOUT_PASS_THRESHOLD = 5;
 
 /** Basic shape check: a non-empty array is treated as a reusable queue. */
 function isNonEmptyArray<T>(value: T[] | null): value is T[] {
   return Array.isArray(value) && value.length > 0;
 }
 
-export default function PracticeSession() {
+export default function TestOut() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { recordResults, introduce } = useAppState();
+  const { markKnown } = useAppState();
 
   const point = id ? grammarPointById.get(id) : undefined;
-  const sessionKey = point ? `practice:${point.id}` : undefined;
+  const sessionKey = point ? `testout:${point.id}` : undefined;
 
   const [exercises] = useState<Exercise[]>(() => {
     if (!point) return [];
@@ -36,12 +38,15 @@ export default function PracticeSession() {
     }
     const fresh = buildPracticeQueue(
       point.id,
-      PRACTICE_SESSION_SIZE,
+      TESTOUT_SIZE,
       mulberry32(Date.now() >>> 0),
     );
     if (sessionKey) saveQueueRecord(sessionKey, fresh);
     return fresh;
   });
+
+  const [phase, setPhase] = useState<"active" | "passed" | "failed">("active");
+  const [correctCount, setCorrectCount] = useState(0);
 
   if (!point) {
     return (
@@ -63,22 +68,65 @@ export default function PracticeSession() {
     );
   }
 
+  if (phase === "passed") {
+    return (
+      <div className="card session-empty">
+        <h1>🎉 Mastered!</h1>
+        <p>
+          {point.title} is now marked as known — it's set to mastered and will
+          be skipped in future reviews.
+        </p>
+        <Link
+          to={`/lessons/${point.id}`}
+          className="browse-btn browse-btn-primary"
+        >
+          Back to lesson
+        </Link>
+        <Link to="/lessons">Browse lessons</Link>
+      </div>
+    );
+  }
+
+  if (phase === "failed") {
+    return (
+      <div className="card session-empty">
+        <h1>Not quite yet</h1>
+        <p>
+          {correctCount} / {exercises.length} correct — keep studying, you need{" "}
+          {TESTOUT_PASS_THRESHOLD} of {TESTOUT_SIZE}.
+        </p>
+        <Link
+          to={`/lessons/${point.id}`}
+          className="browse-btn browse-btn-primary"
+        >
+          Back to lesson
+        </Link>
+        <Link to={`/practice/${point.id}`}>Practice this point</Link>
+      </div>
+    );
+  }
+
   function handleComplete(outcome: SessionOutcome) {
     if (!point) return;
-    recordResults(outcome.results);
-    introduce(point.id);
+    const correct = outcome.results.filter((r) => r.correct).length;
+    setCorrectCount(correct);
     if (sessionKey) {
       clearQueueRecord(sessionKey);
       clearRunRecord(sessionKey);
     }
-    navigate(`/lessons/${point.id}`);
+    if (correct >= TESTOUT_PASS_THRESHOLD) {
+      markKnown(point.id);
+      setPhase("passed");
+    } else {
+      setPhase("failed");
+    }
   }
 
   return (
     <SessionRunner
       exercises={exercises}
       mode="practice"
-      title={point.title}
+      title={`Test out — ${point.title}`}
       onComplete={handleComplete}
       sessionKey={sessionKey}
     />

@@ -16,7 +16,8 @@ const migrations: Record<number, Migration> = {};
 
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
   let data = raw;
-  let version = typeof data.version === "number" ? data.version : SCHEMA_VERSION;
+  let version =
+    typeof data.version === "number" ? data.version : SCHEMA_VERSION;
   while (version < SCHEMA_VERSION) {
     const step = migrations[version];
     if (!step) break;
@@ -32,7 +33,17 @@ function withDefaults(raw: Record<string, unknown>): StoredData {
   const base = defaultStoredData();
   const data = { ...base, ...raw } as StoredData;
   data.stats = { ...base.stats, ...(raw.stats as object | undefined) };
-  data.settings = { ...DEFAULT_SETTINGS, ...(raw.settings as object | undefined) };
+  const rawSettings =
+    (raw.settings as Record<string, unknown> | undefined) ?? {};
+  data.settings = { ...DEFAULT_SETTINGS, ...rawSettings };
+  // Legacy v1 data only had a boolean `showFurigana`; derive the new 3-way
+  // mode from it when `furiganaMode` itself isn't present.
+  if (
+    rawSettings.furiganaMode === undefined &&
+    typeof rawSettings.showFurigana === "boolean"
+  ) {
+    data.settings.furiganaMode = rawSettings.showFurigana ? "always" : "hidden";
+  }
   data.history = Array.isArray(data.history) ? data.history : [];
   data.mockResults = Array.isArray(data.mockResults) ? data.mockResults : [];
   return data;
@@ -56,11 +67,14 @@ export function load(): StoredData {
   }
 }
 
-export function save(data: StoredData): void {
+/** Persists to localStorage; returns whether the write succeeded. */
+export function save(data: StoredData): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
   } catch {
     // Storage full/unavailable — the session still works in memory.
+    return false;
   }
 }
 

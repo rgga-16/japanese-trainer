@@ -39,6 +39,16 @@
   filter: brightness(1.1);
 }
 
+.browse-btn-secondary {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.browse-btn-secondary:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 /* ---------------------------------------------------------------------- */
 /* MasteryBadge                                                            */
 /* ---------------------------------------------------------------------- */
@@ -98,6 +108,15 @@
   border-color: var(--ok);
 }
 .browse-mastery-badge-mastered .browse-mastery-dot-filled {
+  background: var(--ok);
+}
+
+.browse-mastery-badge-known {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: var(--ok);
+}
+.browse-mastery-badge-known .browse-mastery-dot-filled {
   background: var(--ok);
 }
 
@@ -482,12 +501,28 @@
   background: var(--bg-raised);
   border-top: 1px solid var(--border);
   display: flex;
+  align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 
 .lesson-practice-bar .browse-btn {
-  width: 100%;
+  flex: 1 1 200px;
   max-width: 360px;
+}
+
+.lesson-known-indicator {
+  color: var(--ok);
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.lesson-reset-armed {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+  color: var(--bad);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -521,6 +556,21 @@
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.settings-furigana-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-furigana-fieldset legend {
+  padding: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
 }
 
 .settings-sample {

@@ -26,6 +26,8 @@ export interface SrsState {
   incorrectTotal: number;
   /** ISO date the point was introduced (first practice completed). */
   introducedAt: string;
+  /** Additive: true when the learner explicitly marked this point as already known. */
+  testedOut?: boolean;
 }
 
 export interface MockSectionScore {
@@ -52,10 +54,17 @@ export interface DrillStat {
   wrong: number;
 }
 
+export type FuriganaMode = "always" | "hover" | "hidden";
+
 export interface AppSettings {
-  showFurigana: boolean;
+  /** How furigana readings are displayed; replaces the legacy `showFurigana` boolean. */
+  furiganaMode: FuriganaMode;
   /** Max grammar points per review session. */
   reviewCap: number;
+  /** ISO datetime of the last successful "Export data" backup. */
+  lastBackupAt?: string;
+  /** ISO datetime the backup reminder banner was last dismissed (snoozes it). */
+  backupRemindedAt?: string;
 }
 
 export interface StreakStats {
@@ -80,7 +89,7 @@ export interface StoredData {
 export const SCHEMA_VERSION = 1;
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  showFurigana: true,
+  furiganaMode: "always",
   reviewCap: 15,
 };
 

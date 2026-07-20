@@ -1,27 +1,36 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { McqExercise as McqExerciseType } from "../../content/types";
+import type { FuriganaMode } from "../../state/types";
 import Furigana from "../Furigana";
 
 interface McqExerciseProps {
   exercise: McqExerciseType;
-  showFurigana: boolean;
+  furiganaMode: FuriganaMode;
   onAnswer: (choiceIndex: number) => void;
+  /** Locks choice selection, e.g. while feedback for the answer is showing. */
+  disabled?: boolean;
 }
 
 /** Multiple-choice fill-in exercise; 4 choices, keyboard 1-4 select. */
-export default function McqExercise({ exercise, showFurigana, onAnswer }: McqExerciseProps) {
+export default function McqExercise({
+  exercise,
+  furiganaMode,
+  onAnswer,
+  disabled,
+}: McqExerciseProps) {
   const answeredRef = useRef(false);
 
   const select = useCallback(
     (index: number) => {
-      if (answeredRef.current) return;
+      if (disabled || answeredRef.current) return;
       answeredRef.current = true;
       onAnswer(index);
     },
-    [onAnswer],
+    [disabled, onAnswer],
   );
 
   useEffect(() => {
+    if (disabled) return;
     function handleKeyDown(e: KeyboardEvent) {
       const n = Number(e.key);
       if (n >= 1 && n <= exercise.choices.length) {
@@ -30,16 +39,26 @@ export default function McqExercise({ exercise, showFurigana, onAnswer }: McqExe
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [exercise.choices.length, select]);
+  }, [disabled, exercise.choices.length, select]);
 
   return (
     <div className="exercise mcq-exercise">
-      <Furigana text={exercise.question} show={showFurigana} className="exercise-prompt" />
+      <Furigana
+        text={exercise.question}
+        mode={furiganaMode}
+        className="exercise-prompt"
+      />
       <div className="mcq-choices">
         {exercise.choices.map((choice, i) => (
-          <button key={choice} type="button" className="mcq-choice" onClick={() => select(i)}>
+          <button
+            key={choice}
+            type="button"
+            className="mcq-choice"
+            onClick={() => select(i)}
+            disabled={disabled}
+          >
             <span className="mcq-choice-num">{i + 1}</span>
-            <Furigana text={choice} show={showFurigana} />
+            <Furigana text={choice} mode={furiganaMode} />
           </button>
         ))}
       </div>

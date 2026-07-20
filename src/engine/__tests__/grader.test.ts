@@ -27,7 +27,7 @@ describe("normalize", () => {
 });
 
 describe("expandAccepted", () => {
-  it("expands to kanji-surface and all-kana forms, deduped", () => {
+  it("expands a single-run answer to kanji-surface and all-kana forms", () => {
     expect(expandAccepted(["食[た]べます"])).toEqual(["食べます", "たべます"]);
   });
 
@@ -41,6 +41,15 @@ describe("expandAccepted", () => {
       "たべる",
       "飲む",
       "のむ",
+    ]);
+  });
+
+  it("expands a multi-run answer into mixed kanji/kana variants, all-kanji first", () => {
+    expect(expandAccepted(["誰[だれ]がパーティーに来[き]ますか。"])).toEqual([
+      "誰がパーティーに来ますか。",
+      "だれがパーティーに来ますか。",
+      "誰がパーティーにきますか。",
+      "だれがパーティーにきますか。",
     ]);
   });
 });
@@ -102,5 +111,36 @@ describe("gradeTyped", () => {
 
     const right = gradeTyped("食べます", ["食[た]べます"]);
     expect(right.matched).toBe("食べます");
+  });
+
+  it("accepts a mixed kanji/kana input and reports it as non-canonical", () => {
+    const result = gradeTyped("だれがパーティーに来ますか？", [
+      "誰[だれ]がパーティーに来[き]ますか。",
+    ]);
+    expect(result.correct).toBe(true);
+    expect(result.canonical).toBe("誰がパーティーに来ますか");
+    // `closest` is the raw kanji surface (keeps the authored trailing 。) so the
+    // UI can resolve it back to the furigana-notation answer; `canonical` is the
+    // normalized form used for the note.
+    expect(result.closest).toBe("誰がパーティーに来ますか。");
+    expect(result.nonCanonical).toBe(true);
+  });
+
+  it("accepts fully-kanji input as canonical", () => {
+    const result = gradeTyped("誰がパーティーに来ますか", [
+      "誰[だれ]がパーティーに来[き]ますか。",
+    ]);
+    expect(result.correct).toBe(true);
+    expect(result.canonical).toBe("誰がパーティーに来ますか");
+    expect(result.nonCanonical).toBeFalsy();
+  });
+
+  it("accepts fully-kana (reading-only) input as non-canonical", () => {
+    const result = gradeTyped("だれがパーティーにきますか", [
+      "誰[だれ]がパーティーに来[き]ますか。",
+    ]);
+    expect(result.correct).toBe(true);
+    expect(result.canonical).toBe("誰がパーティーに来ますか");
+    expect(result.nonCanonical).toBe(true);
   });
 });

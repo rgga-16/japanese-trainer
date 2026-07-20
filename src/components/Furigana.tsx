@@ -1,19 +1,32 @@
 import { parseFurigana } from "../engine/furigana";
+import type { FuriganaMode } from "../state/types";
 
 interface FuriganaProps {
   /** Text in furigana notation, e.g. "窓[まど]を開[あ]けてください。" */
   text: string;
-  /** When false, ruby readings are hidden (layout stays stable via CSS visibility). */
-  show?: boolean;
+  /**
+   * How readings are displayed: "always" shown, "hover" revealed on
+   * hover/tap (ruby stays in DOM, CSS toggles visibility), "hidden" never
+   * shown. Defaults to "always".
+   */
+  mode?: FuriganaMode;
   className?: string;
 }
 
 /** Renders furigana-notation text as <ruby> annotated Japanese. */
-export default function Furigana({ text, show = true, className }: FuriganaProps) {
+export default function Furigana({
+  text,
+  mode = "always",
+  className,
+}: FuriganaProps) {
   const segments = parseFurigana(text);
-  const cls = ["jp", show ? "" : "furigana-hidden", className ?? ""]
-    .filter(Boolean)
-    .join(" ");
+  const modeClass =
+    mode === "hidden"
+      ? "furigana-hidden"
+      : mode === "hover"
+        ? "furigana-hover"
+        : "";
+  const cls = ["jp", modeClass, className ?? ""].filter(Boolean).join(" ");
   return (
     <span className={cls} lang="ja">
       {segments.map((seg, i) =>

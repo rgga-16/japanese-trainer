@@ -194,6 +194,22 @@
   margin: 0;
 }
 
+.feedback-canonical-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.feedback-canonical-answer {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.feedback-canonical-note-en {
+  font-size: 0.85rem;
+}
+
 .feedback-correct .feedback-status {
   color: var(--ok);
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import BackupReminderBanner from "../components/BackupReminderBanner";
 import Furigana from "../components/Furigana";
 import { allGrammarPoints, grammarPointById } from "../content";
 import { buildReviewQueue, todayIso } from "../engine/srs";
@@ -8,7 +9,7 @@ import "../styles/browse.css";
 
 export default function Dashboard() {
   const { data } = useAppState();
-  const showFurigana = data.settings.showFurigana;
+  const furiganaMode = data.settings.furiganaMode;
 
   const reviewQueue = buildReviewQueue(
     Object.values(data.srs),
@@ -22,7 +23,9 @@ export default function Dashboard() {
   const weakest = weakestPoints(data);
   const recentMocks = [...data.mockResults].slice(-3).reverse();
   const isBrandNew =
-    introducedCount === 0 && data.history.length === 0 && data.mockResults.length === 0;
+    introducedCount === 0 &&
+    data.history.length === 0 &&
+    data.mockResults.length === 0;
 
   if (isBrandNew) {
     return (
@@ -31,8 +34,9 @@ export default function Dashboard() {
         <div className="card dash-welcome">
           <h2>Welcome to 文法 N4 Trainer</h2>
           <p>
-            You haven't studied any grammar points yet. Browse the lesson list to pick a
-            point and start practicing — it'll show up here once you begin.
+            You haven't studied any grammar points yet. Browse the lesson list
+            to pick a point and start practicing — it'll show up here once you
+            begin.
           </p>
           <Link to="/lessons" className="browse-btn browse-btn-primary">
             Browse lessons
@@ -46,7 +50,11 @@ export default function Dashboard() {
     <div className="dash-root">
       <h1>Dashboard</h1>
 
-      <div className={`card dash-cta ${reviewQueue.length > 0 ? "dash-cta-due" : "dash-cta-clear"}`}>
+      <BackupReminderBanner />
+
+      <div
+        className={`card dash-cta ${reviewQueue.length > 0 ? "dash-cta-due" : "dash-cta-clear"}`}
+      >
         {reviewQueue.length > 0 ? (
           <>
             <div className="dash-cta-count">{reviewQueue.length}</div>
@@ -70,9 +78,12 @@ export default function Dashboard() {
       <div className="dash-grid">
         <div className="card dash-stat">
           <div className="dash-stat-value">
-            🔥 {data.stats.currentStreak} {data.stats.currentStreak === 1 ? "day" : "days"}
+            🔥 {data.stats.currentStreak}{" "}
+            {data.stats.currentStreak === 1 ? "day" : "days"}
           </div>
-          <div className="dash-stat-label">current streak · longest {data.stats.longestStreak}</div>
+          <div className="dash-stat-label">
+            current streak · longest {data.stats.longestStreak}
+          </div>
         </div>
 
         <div className="card dash-stat">
@@ -85,9 +96,14 @@ export default function Dashboard() {
         <div className="card dash-stat dash-stat-wide">
           <div className="dash-stat-value">{readinessPct}%</div>
           <div className="dash-gauge" aria-hidden="true">
-            <div className="dash-gauge-fill" style={{ width: `${readinessPct}%` }} />
+            <div
+              className="dash-gauge-fill"
+              style={{ width: `${readinessPct}%` }}
+            />
           </div>
-          <div className="dash-stat-label">N4 readiness — grammar-section estimate</div>
+          <div className="dash-stat-label">
+            N4 readiness — grammar-section estimate
+          </div>
         </div>
       </div>
 
@@ -95,7 +111,8 @@ export default function Dashboard() {
         <h2>Weakest points</h2>
         {weakest.length === 0 ? (
           <p className="dash-empty">
-            Not enough data yet — a point needs at least 5 attempts before it shows up here.
+            Not enough data yet — a point needs at least 5 attempts before it
+            shows up here.
           </p>
         ) : (
           <div className="card dash-weakest">
@@ -103,11 +120,17 @@ export default function Dashboard() {
               const point = grammarPointById.get(w.grammarPointId);
               if (!point) return null;
               return (
-                <Link key={w.grammarPointId} to={`/lessons/${w.grammarPointId}`} className="dash-weakest-row">
+                <Link
+                  key={w.grammarPointId}
+                  to={`/lessons/${w.grammarPointId}`}
+                  className="dash-weakest-row"
+                >
                   <span className="dash-weakest-title">
-                    <Furigana text={point.title} show={showFurigana} />
+                    <Furigana text={point.title} mode={furiganaMode} />
                   </span>
-                  <span className="dash-weakest-acc">{Math.round(w.accuracy * 100)}%</span>
+                  <span className="dash-weakest-acc">
+                    {Math.round(w.accuracy * 100)}%
+                  </span>
                 </Link>
               );
             })}

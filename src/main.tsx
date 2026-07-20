@@ -13,6 +13,7 @@ import MockTest from "./views/MockTest";
 import PracticeSession from "./views/PracticeSession";
 import ReviewSession from "./views/ReviewSession";
 import Settings from "./views/Settings";
+import TestOut from "./views/TestOut";
 
 const router = createHashRouter([
   {
@@ -23,6 +24,7 @@ const router = createHashRouter([
       { path: "lessons", element: <LessonBrowser /> },
       { path: "lessons/:id", element: <LessonDetail /> },
       { path: "practice/:id", element: <PracticeSession /> },
+      { path: "testout/:id", element: <TestOut /> },
       { path: "review", element: <ReviewSession /> },
       { path: "drills", element: <ConjugationDrill /> },
       { path: "mock", element: <MockTest /> },

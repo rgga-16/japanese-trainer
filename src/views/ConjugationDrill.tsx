@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AnswerInput from "../components/AnswerInput";
 import Furigana from "../components/Furigana";
 import { allVocab } from "../content";
-import type { AdjForm, VerbClass, VerbForm, VocabEntry } from "../content/types";
+import type {
+  AdjForm,
+  VerbClass,
+  VerbForm,
+  VocabEntry,
+} from "../content/types";
 import { conjugateAdjective, conjugateVerb } from "../engine/conjugator";
 import { gradeTyped } from "../engine/grader";
 import { mulberry32, shuffle } from "../engine/rng";
@@ -73,7 +78,8 @@ function buildQuestions(
   const pool =
     kind === "verbs"
       ? allVocab.filter(
-          (v) => v.pos === "verb" && v.verbClass && classes.includes(v.verbClass),
+          (v) =>
+            v.pos === "verb" && v.verbClass && classes.includes(v.verbClass),
         )
       : allVocab.filter((v) => v.pos === "i-adj" || v.pos === "na-adj");
   if (pool.length === 0) return [];
@@ -112,7 +118,11 @@ export default function ConjugationDrill() {
   const [kind, setKind] = useState<DrillKind>("verbs");
   const [classes, setClasses] = useState<VerbClass[]>(["godan", "ichidan"]);
   const [verbForms, setVerbForms] = useState<VerbForm[]>(DEFAULT_VERB_FORMS);
-  const [adjForms, setAdjForms] = useState<AdjForm[]>(["negative", "past", "te"]);
+  const [adjForms, setAdjForms] = useState<AdjForm[]>([
+    "negative",
+    "past",
+    "te",
+  ]);
   const [questions, setQuestions] = useState<DrillQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [answered, setAnswered] = useState<AnsweredQuestion[]>([]);
@@ -124,7 +134,9 @@ export default function ConjugationDrill() {
   }, [feedback]);
 
   const canStart =
-    kind === "verbs" ? classes.length > 0 && verbForms.length > 0 : adjForms.length > 0;
+    kind === "verbs"
+      ? classes.length > 0 && verbForms.length > 0
+      : adjForms.length > 0;
 
   const drillStatRows = useMemo(
     () =>
@@ -180,7 +192,9 @@ export default function ConjugationDrill() {
           <div className="drill-tabs">
             <button
               type="button"
-              className={kind === "verbs" ? "drill-tab drill-tab-active" : "drill-tab"}
+              className={
+                kind === "verbs" ? "drill-tab drill-tab-active" : "drill-tab"
+              }
               onClick={() => setKind("verbs")}
             >
               Verbs
@@ -188,7 +202,9 @@ export default function ConjugationDrill() {
             <button
               type="button"
               className={
-                kind === "adjectives" ? "drill-tab drill-tab-active" : "drill-tab"
+                kind === "adjectives"
+                  ? "drill-tab drill-tab-active"
+                  : "drill-tab"
               }
               onClick={() => setKind("adjectives")}
             >
@@ -291,13 +307,18 @@ export default function ConjugationDrill() {
           </p>
           <ul className="drill-summary">
             {answered.map((a, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static result list
-              <li key={i} className={a.correct ? "drill-row-ok" : "drill-row-bad"}>
+              <li
+                // biome-ignore lint/suspicious/noArrayIndexKey: static result list
+                key={i}
+                className={a.correct ? "drill-row-ok" : "drill-row-bad"}
+              >
                 <span>{a.correct ? "✓" : "✗"}</span>
-                <Furigana text={a.entry.ja} show={data.settings.showFurigana} />
+                <Furigana text={a.entry.ja} mode={data.settings.furiganaMode} />
                 <span className="drill-form jp">{a.formLabel}</span>
                 <span className="jp">
-                  {a.correct ? a.input : `${a.input || "—"} → ${a.expectedSurface}`}
+                  {a.correct
+                    ? a.input
+                    : `${a.input || "—"} → ${a.expectedSurface}`}
                 </span>
               </li>
             ))}
@@ -325,7 +346,7 @@ export default function ConjugationDrill() {
         <div className="drill-prompt">
           <Furigana
             text={q.entry.ja}
-            show={data.settings.showFurigana}
+            mode={data.settings.furiganaMode}
             className="drill-word"
           />
           <span className="drill-gloss">{q.entry.en}</span>
@@ -334,7 +355,11 @@ export default function ConjugationDrill() {
           → <span className="jp">{q.formLabel}</span>
         </p>
         {feedback === null ? (
-          <AnswerInput key={index} onSubmit={submit} placeholder="答えを入力…" />
+          <AnswerInput
+            key={index}
+            onSubmit={submit}
+            placeholder="答えを入力…"
+          />
         ) : (
           <div
             className={
@@ -346,10 +371,18 @@ export default function ConjugationDrill() {
             <p>
               {feedback.correct ? "正解！" : "残念…"}{" "}
               <span className="jp drill-expected">
-                <Furigana text={feedback.accepted} show={data.settings.showFurigana} />
+                <Furigana
+                  text={feedback.accepted}
+                  mode={data.settings.furiganaMode}
+                />
               </span>
             </p>
-            <button type="button" className="primary" onClick={next} ref={nextButtonRef}>
+            <button
+              type="button"
+              className="primary"
+              onClick={next}
+              ref={nextButtonRef}
+            >
               {index + 1 >= questions.length ? "Finish" : "Next"}
             </button>
           </div>

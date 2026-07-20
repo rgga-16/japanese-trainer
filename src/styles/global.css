@@ -13,9 +13,11 @@
   --bad-soft: rgba(224, 108, 91, 0.14);
   --warn: #d9a83f;
   --radius: 10px;
-  --font-jp: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI",
-    "Yu Gothic", Meiryo, sans-serif;
-  --font-ui: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+  --font-jp:
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic",
+    Meiryo, sans-serif;
+  --font-ui:
+    system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
     "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo;
 }
 
@@ -96,6 +98,47 @@ body {
   font-weight: 600;
 }
 
+.app-saved-indicator {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+
+.app-saved-indicator.app-saved-flash {
+  color: var(--ok);
+}
+
+.app-saved-sub {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75em;
+}
+
+.backup-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-color: var(--warn);
+  background: rgba(217, 168, 63, 0.1);
+  margin-bottom: 1rem;
+}
+
+.backup-banner-text {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+}
+
+.backup-banner-dismiss {
+  flex-shrink: 0;
+}
+
 .app-main {
   flex: 1;
   width: 100%;
@@ -116,6 +159,15 @@ ruby rt {
 
 .furigana-hidden rt {
   visibility: hidden;
+}
+
+.furigana-hover rt {
+  visibility: hidden;
+}
+
+.furigana-hover ruby:hover rt,
+.furigana-hover ruby:active rt {
+  visibility: visible;
 }
 
 h1 {

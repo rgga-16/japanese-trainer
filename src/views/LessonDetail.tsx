@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Furigana from "../components/Furigana";
 import LessonProse from "../components/LessonProse";
@@ -23,8 +24,13 @@ const PRACTICE_TARGET = 10;
 
 export default function LessonDetail() {
   const { id } = useParams<{ id: string }>();
-  const { data } = useAppState();
-  const showFurigana = data.settings.showFurigana;
+  const { data, resetPoint } = useAppState();
+  const furiganaMode = data.settings.furiganaMode;
+
+  // Track which point armed the reset (not a bare boolean) so navigating to a
+  // different lesson — which reuses this component and only changes `id` —
+  // implicitly disarms, without a reset-on-id effect.
+  const [armedPointId, setArmedPointId] = useState<string | null>(null);
 
   const point = id ? grammarPointById.get(id) : undefined;
 
@@ -44,8 +50,21 @@ export default function LessonDetail() {
 
   const srs = data.srs[point.id];
   const bankSize = exercisesByPointId.get(point.id)?.length ?? 0;
-  const practiceCount = bankSize > 0 && bankSize < PRACTICE_TARGET ? bankSize : PRACTICE_TARGET;
+  const practiceCount =
+    bankSize > 0 && bankSize < PRACTICE_TARGET ? bankSize : PRACTICE_TARGET;
   const acc = accuracyByPoint(data).get(point.id);
+
+  const resetArmed = armedPointId === point.id;
+
+  function handleResetClick() {
+    if (!point) return;
+    if (resetArmed) {
+      resetPoint(point.id);
+      setArmedPointId(null);
+    } else {
+      setArmedPointId(point.id);
+    }
+  }
 
   return (
     <div className="lesson-root">
@@ -54,14 +73,14 @@ export default function LessonDetail() {
       </Link>
 
       <h1 className="lesson-title">
-        <Furigana text={point.title} show={showFurigana} />
+        <Furigana text={point.title} mode={furiganaMode} />
       </h1>
       <p className="lesson-meaning">{point.meaning}</p>
 
       <div className="lesson-chips">
         <span className="lesson-chip">{point.level}</span>
         <span className="lesson-chip">{CATEGORY_LABELS[point.category]}</span>
-        <MasteryBadge box={srs?.box} />
+        <MasteryBadge box={srs?.box} testedOut={srs?.testedOut} />
       </div>
 
       {acc && acc.attempts > 0 && (
@@ -82,7 +101,7 @@ export default function LessonDetail() {
 
       <section className="lesson-section">
         <h2>Lesson</h2>
-        <LessonProse text={point.lesson} show={showFurigana} />
+        <LessonProse text={point.lesson} mode={furiganaMode} />
       </section>
 
       <section className="lesson-section">
@@ -91,7 +110,7 @@ export default function LessonDetail() {
           {point.examples.map((ex) => (
             <div key={ex.ja} className="lesson-example">
               <div className="lesson-example-ja">
-                <Furigana text={ex.ja} show={showFurigana} />
+                <Furigana text={ex.ja} mode={furiganaMode} />
               </div>
               <div className="lesson-example-en">{ex.en}</div>
             </div>
@@ -107,8 +126,12 @@ export default function LessonDetail() {
               const rel = grammarPointById.get(relId);
               if (!rel) return null;
               return (
-                <Link key={relId} to={`/lessons/${relId}`} className="lesson-related-link">
-                  <Furigana text={rel.title} show={showFurigana} />
+                <Link
+                  key={relId}
+                  to={`/lessons/${relId}`}
+                  className="lesson-related-link"
+                >
+                  <Furigana text={rel.title} mode={furiganaMode} />
                 </Link>
               );
             })}
@@ -117,9 +140,35 @@ export default function LessonDetail() {
       )}
 
       <div className="lesson-practice-bar">
-        <Link to={`/practice/${point.id}`} className="browse-btn browse-btn-primary">
+        <Link
+          to={`/practice/${point.id}`}
+          className="browse-btn browse-btn-primary"
+        >
           Practice — {practiceCount} question{practiceCount === 1 ? "" : "s"}
         </Link>
+        {srs?.testedOut ? (
+          <>
+            <span className="lesson-known-indicator">Known ✓</span>
+            <button
+              type="button"
+              className={
+                resetArmed
+                  ? "browse-btn browse-btn-secondary lesson-reset-armed"
+                  : "browse-btn browse-btn-secondary"
+              }
+              onClick={handleResetClick}
+            >
+              {resetArmed ? "Click again to confirm" : "Reset progress"}
+            </button>
+          </>
+        ) : (
+          <Link
+            to={`/testout/${point.id}`}
+            className="browse-btn browse-btn-secondary"
+          >
+            もう知っている — テストで確認 / I already know this
+          </Link>
+        )}
       </div>
     </div>
   );

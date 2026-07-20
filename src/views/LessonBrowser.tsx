@@ -38,7 +38,7 @@ interface CategoryGroup {
 export default function LessonBrowser() {
   const { data } = useAppState();
   const [level, setLevel] = useState<Level>("N4");
-  const showFurigana = data.settings.showFurigana;
+  const furiganaMode = data.settings.furiganaMode;
 
   const n4Count = useMemo(
     () => allGrammarPoints.filter((p) => p.level === "N4").length,
@@ -79,7 +79,9 @@ export default function LessonBrowser() {
           type="button"
           role="tab"
           aria-selected={level === "N4"}
-          className={level === "N4" ? "browse-tab browse-tab-active" : "browse-tab"}
+          className={
+            level === "N4" ? "browse-tab browse-tab-active" : "browse-tab"
+          }
           onClick={() => setLevel("N4")}
         >
           N4 ({n4Count})
@@ -88,7 +90,9 @@ export default function LessonBrowser() {
           type="button"
           role="tab"
           aria-selected={level === "N5"}
-          className={level === "N5" ? "browse-tab browse-tab-active" : "browse-tab"}
+          className={
+            level === "N5" ? "browse-tab browse-tab-active" : "browse-tab"
+          }
           onClick={() => setLevel("N5")}
         >
           N5 ({n5Count})
@@ -103,11 +107,14 @@ export default function LessonBrowser() {
               <Link key={p.id} to={`/lessons/${p.id}`} className="browse-row">
                 <span className="browse-row-main">
                   <span className="browse-row-title">
-                    <Furigana text={p.title} show={showFurigana} />
+                    <Furigana text={p.title} mode={furiganaMode} />
                   </span>
                   <span className="browse-row-meaning">{p.meaning}</span>
                 </span>
-                <MasteryBadge box={data.srs[p.id]?.box} />
+                <MasteryBadge
+                  box={data.srs[p.id]?.box}
+                  testedOut={data.srs[p.id]?.testedOut}
+                />
               </Link>
             ))}
           </div>

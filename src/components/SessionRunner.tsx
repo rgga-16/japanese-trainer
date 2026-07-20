@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Exercise } from "../content/types";
 import { stripFurigana } from "../engine/furigana";
 import { gradeTyped } from "../engine/grader";
@@ -10,6 +10,11 @@ import McqExercise from "./exercises/McqExercise";
 import OrderingExercise from "./exercises/OrderingExercise";
 import TranslationExercise from "./exercises/TranslationExercise";
 import FeedbackPanel from "./FeedbackPanel";
+import {
+  clearRunRecord,
+  loadRunRecord,
+  saveRunRecord,
+} from "./sessionPersistence";
 
 export interface SessionOutcome {
   results: ExerciseResult[];
@@ -21,6 +26,12 @@ interface SessionRunnerProps {
   mode: StudyMode;
   onComplete: (outcome: SessionOutcome) => void;
   title: string;
+  /**
+   * When provided, the in-progress run (index/results/feedback/finished) is
+   * persisted to sessionStorage so navigating away and back resumes the same
+   * question instead of losing state. Omit (e.g. MockTest) to opt out.
+   */
+  sessionKey?: string;
 }
 
 interface FeedbackData {
@@ -29,16 +40,58 @@ interface FeedbackData {
   expected: string;
   alternatives?: string[];
   explanation?: string;
+  /** Canonical (all-kanji) surface of the matched answer; set when correct. */
+  canonical?: string;
+  /** True when correct but the user's input used kana where the canonical
+   * form uses kanji. */
+  nonCanonical?: boolean;
+}
+
+interface RunRecord {
+  index: number;
+  results: ExerciseResult[];
+  feedback: FeedbackData | null;
+  finished: boolean;
+}
+
+/** Basic shape/bounds check so a corrupt or stale record never wedges the UI. */
+function isValidRunRecord(value: unknown, total: number): value is RunRecord {
+  if (!value || typeof value !== "object") return false;
+  const r = value as Partial<RunRecord>;
+  if (typeof r.index !== "number" || !Number.isInteger(r.index) || r.index < 0)
+    return false;
+  if (total > 0 && r.index >= total) return false;
+  if (!Array.isArray(r.results)) return false;
+  if (typeof r.finished !== "boolean") return false;
+  if (
+    r.feedback !== null &&
+    r.feedback !== undefined &&
+    typeof r.feedback !== "object"
+  )
+    return false;
+  return true;
+}
+
+function loadValidRunRecord(
+  sessionKey: string,
+  total: number,
+): RunRecord | null {
+  const record = loadRunRecord<RunRecord>(sessionKey);
+  return isValidRunRecord(record, total) ? record : null;
 }
 
 function gradeTypedAnswer(accepted: string[], input: string): FeedbackData {
   const grade = gradeTyped(input, accepted);
-  const matchedFurigana = accepted.find((a) => stripFurigana(a) === grade.closest);
+  const matchedFurigana = accepted.find(
+    (a) => stripFurigana(a) === grade.closest,
+  );
   return {
     correct: grade.correct,
     userAnswer: input,
     expected: matchedFurigana ?? grade.closest,
     alternatives: accepted.filter((a) => a !== matchedFurigana),
+    canonical: grade.canonical,
+    nonCanonical: grade.nonCanonical,
   };
 }
 
@@ -56,17 +109,50 @@ function promptLabel(ex: Exercise): string {
 }
 
 /** Reusable session loop: renders one exercise at a time, grades, shows feedback, then a summary. */
-export default function SessionRunner({ exercises, mode, onComplete, title }: SessionRunnerProps) {
+export default function SessionRunner({
+  exercises,
+  mode,
+  onComplete,
+  title,
+  sessionKey,
+}: SessionRunnerProps) {
   const { data } = useAppState();
-  const showFurigana = data.settings.showFurigana;
+  const furiganaMode = data.settings.furiganaMode;
 
-  const [index, setIndex] = useState(0);
-  const [feedback, setFeedback] = useState<FeedbackData | null>(null);
-  const [results, setResults] = useState<ExerciseResult[]>([]);
-  const [finished, setFinished] = useState(false);
+  // Read any persisted run once per mount (not per render) — StrictMode-safe
+  // since it never re-reads after the first commit.
+  const initialRun = useRef<RunRecord | null | undefined>(undefined);
+  if (initialRun.current === undefined) {
+    initialRun.current = sessionKey
+      ? loadValidRunRecord(sessionKey, exercises.length)
+      : null;
+  }
+
+  const [index, setIndex] = useState(() => initialRun.current?.index ?? 0);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(
+    () => initialRun.current?.feedback ?? null,
+  );
+  const [results, setResults] = useState<ExerciseResult[]>(
+    () => initialRun.current?.results ?? [],
+  );
+  const [finished, setFinished] = useState(
+    () => initialRun.current?.finished ?? false,
+  );
 
   const total = exercises.length;
   const exercise = exercises[index];
+
+  // Persist the run so navigating away (e.g. to Settings) and back resumes at
+  // the same question. Once the session finishes, drop the record instead —
+  // the next visit should start clean (the view also clears its queue record).
+  useEffect(() => {
+    if (!sessionKey) return;
+    if (finished) {
+      clearRunRecord(sessionKey);
+      return;
+    }
+    saveRunRecord(sessionKey, { index, results, feedback, finished });
+  }, [sessionKey, index, results, feedback, finished]);
 
   const advance = useCallback(() => {
     setFeedback(null);
@@ -93,7 +179,14 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [feedback, advance]);
 
-  function recordAndShowFeedback(ex: Exercise, correct: boolean, fb: FeedbackData) {
+  function recordAndShowFeedback(
+    ex: Exercise,
+    correct: boolean,
+    fb: FeedbackData,
+  ) {
+    // Guard against double-submit (repeated Enter/click while feedback is
+    // already showing) inflating the progress bar with duplicate results.
+    if (feedback !== null) return;
     const result: ExerciseResult = {
       exerciseId: ex.id,
       grammarPointId: ex.grammarPointId,
@@ -118,14 +211,26 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
           {exercises.map((ex, i) => {
             const r = results[i];
             return (
-              <li key={ex.id} className={r?.correct ? "summary-correct" : "summary-incorrect"}>
+              <li
+                key={ex.id}
+                className={r?.correct ? "summary-correct" : "summary-incorrect"}
+              >
                 <span className="summary-mark">{r?.correct ? "✓" : "✗"}</span>
                 <span className="summary-prompt">{promptLabel(ex)}</span>
               </li>
             );
           })}
         </ul>
-        <button type="button" className="primary" onClick={() => onComplete({ results })}>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => {
+            // Idempotent: the finished-effect above already clears this, but
+            // clear again defensively in case onComplete fires first.
+            if (sessionKey) clearRunRecord(sessionKey);
+            onComplete({ results });
+          }}
+        >
           Finish
         </button>
       </div>
@@ -140,7 +245,10 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
           {index + 1} / {total}
         </div>
         <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${(results.length / total) * 100}%` }} />
+          <div
+            className="progress-fill"
+            style={{ width: `${(results.length / total) * 100}%` }}
+          />
         </div>
       </div>
 
@@ -152,7 +260,8 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
                 <TranslationExercise
                   key={exercise.id}
                   exercise={exercise}
-                  showFurigana={showFurigana}
+                  furiganaMode={furiganaMode}
+                  disabled={feedback !== null}
                   onAnswer={(value) => {
                     const fb = gradeTypedAnswer(exercise.accepted, value);
                     recordAndShowFeedback(exercise, fb.correct, fb);
@@ -164,7 +273,8 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
                 <ClozeExercise
                   key={exercise.id}
                   exercise={exercise}
-                  showFurigana={showFurigana}
+                  furiganaMode={furiganaMode}
+                  disabled={feedback !== null}
                   onAnswer={(value) => {
                     const fb = gradeTypedAnswer(exercise.accepted, value);
                     recordAndShowFeedback(exercise, fb.correct, fb);
@@ -176,7 +286,8 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
                 <McqExercise
                   key={exercise.id}
                   exercise={exercise}
-                  showFurigana={showFurigana}
+                  furiganaMode={furiganaMode}
+                  disabled={feedback !== null}
                   onAnswer={(choiceIndex) => {
                     const correct = choiceIndex === exercise.correctIndex;
                     const fb: FeedbackData = {
@@ -194,7 +305,8 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
                 <OrderingExercise
                   key={exercise.id}
                   exercise={exercise}
-                  showFurigana={showFurigana}
+                  furiganaMode={furiganaMode}
+                  disabled={feedback !== null}
                   onAnswer={(order) => {
                     const correct = order.every((v, i) => v === i);
                     const lead = exercise.lead ?? "";
@@ -221,8 +333,10 @@ export default function SessionRunner({ exercises, mode, onComplete, title }: Se
           expected={feedback.expected}
           alternatives={feedback.alternatives}
           explanation={feedback.explanation}
+          canonical={feedback.canonical}
+          nonCanonical={feedback.nonCanonical}
           grammarPointId={exercise.grammarPointId}
-          showFurigana={showFurigana}
+          furiganaMode={furiganaMode}
           onNext={advance}
         />
       )}

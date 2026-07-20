@@ -1,15 +1,16 @@
+import type { FuriganaMode } from "../state/types";
 import Furigana from "./Furigana";
 
 interface LessonProseProps {
   /** Markdown-lite lesson text: blank-line paragraphs, **bold**, "- " bullets. */
   text: string;
-  /** Forwarded to every Furigana chunk; defaults to shown. */
-  show?: boolean;
+  /** Forwarded to every Furigana chunk; defaults to "always". */
+  mode?: FuriganaMode;
 }
 
 const BOLD_SPLIT = /(\*\*[^*]+\*\*)/;
 
-function renderInline(text: string, show: boolean, keyPrefix: string) {
+function renderInline(text: string, mode: FuriganaMode, keyPrefix: string) {
   return text
     .split(BOLD_SPLIT)
     .filter((chunk) => chunk !== "")
@@ -18,16 +19,19 @@ function renderInline(text: string, show: boolean, keyPrefix: string) {
       if (chunk.startsWith("**") && chunk.endsWith("**") && chunk.length >= 4) {
         return (
           <strong key={key}>
-            <Furigana text={chunk.slice(2, -2)} show={show} />
+            <Furigana text={chunk.slice(2, -2)} mode={mode} />
           </strong>
         );
       }
-      return <Furigana key={key} text={chunk} show={show} />;
+      return <Furigana key={key} text={chunk} mode={mode} />;
     });
 }
 
 /** Renders the lesson markdown-lite format, running every text chunk through Furigana. */
-export default function LessonProse({ text, show = true }: LessonProseProps) {
+export default function LessonProse({
+  text,
+  mode = "always",
+}: LessonProseProps) {
   const blocks = text
     .split(/\n{2,}/)
     .map((b) => b.trim())
@@ -40,7 +44,8 @@ export default function LessonProse({ text, show = true }: LessonProseProps) {
           .split("\n")
           .map((l) => l.trim())
           .filter((l) => l.length > 0);
-        const isList = lines.length > 0 && lines.every((l) => l.startsWith("- "));
+        const isList =
+          lines.length > 0 && lines.every((l) => l.startsWith("- "));
 
         if (isList) {
           return (
@@ -48,7 +53,9 @@ export default function LessonProse({ text, show = true }: LessonProseProps) {
             <ul key={bi} className="lesson-prose-list">
               {lines.map((line, li) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static line list
-                <li key={li}>{renderInline(line.slice(2), show, `${bi}-${li}`)}</li>
+                <li key={li}>
+                  {renderInline(line.slice(2), mode, `${bi}-${li}`)}
+                </li>
               ))}
             </ul>
           );
@@ -56,7 +63,7 @@ export default function LessonProse({ text, show = true }: LessonProseProps) {
 
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: static paragraph-block list
-          <p key={bi}>{renderInline(lines.join(" "), show, `${bi}`)}</p>
+          <p key={bi}>{renderInline(lines.join(" "), mode, `${bi}`)}</p>
         );
       })}
     </div>
