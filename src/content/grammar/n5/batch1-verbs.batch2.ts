@@ -1,0 +1,276 @@
+// Batch 2 exercises for the N5 verb-form points (ex8–ex11).
+// Sidecar to grammar/n5/batch1-verbs.ts — see CONTENT_GUIDE.md "Sidecar files".
+
+import type { Exercise } from "../../types";
+
+export const exercises: Exercise[] = [
+  // -------------------------------------------------------------------
+  // n5.plain-form
+  // -------------------------------------------------------------------
+  {
+    id: "n5.plain-form.ex8",
+    grammarPointId: "n5.plain-form",
+    source: "bank",
+    kind: "mcq",
+    question: "明日[あした]は忙[いそが]しいので、友達[ともだち]を＿＿。",
+    choices: ["呼[よ]わない", "呼[よ]ばない", "呼[よ]むない", "呼[よ]んない"],
+    correctIndex: 1,
+    explanation: "呼ぶ is a godan bu-verb, so its ない-form shifts to the ba-row: 呼ばない. わない, むない, and んない are not valid conjugations of 呼ぶ.",
+  },
+  {
+    id: "n5.plain-form.ex9",
+    grammarPointId: "n5.plain-form",
+    source: "bank",
+    kind: "ordering",
+    segments: ["私[わたし]は", "海[うみ]で", "泳[およ]がない。"],
+    starIndex: 1,
+    translationEn: "I don't swim in the ocean.",
+  },
+  {
+    id: "n5.plain-form.ex10",
+    grammarPointId: "n5.plain-form",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "テレビを見[み]ません。",
+    instruction: "Rewrite in the plain non-past negative (ない形).",
+    targetLabel: "ない形",
+    accepted: ["テレビを見[み]ない。"],
+    translationEn: "I don't watch TV.",
+  },
+  {
+    id: "n5.plain-form.ex11",
+    grammarPointId: "n5.plain-form",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "毎日[まいにち]新聞[しんぶん]を読[よ]みます。",
+    instruction: "Rewrite in the plain non-past (辞書形).",
+    targetLabel: "辞書形",
+    accepted: ["毎日[まいにち]新聞[しんぶん]を読[よ]む。"],
+    translationEn: "I read the newspaper every day.",
+  },
+
+  // -------------------------------------------------------------------
+  // n5.ta-form
+  // -------------------------------------------------------------------
+  {
+    id: "n5.ta-form.ex8",
+    grammarPointId: "n5.ta-form",
+    source: "bank",
+    kind: "mcq",
+    question: "夏[なつ]、海[うみ]で＿＿。",
+    choices: ["泳[およ]いた", "泳[およ]んだ", "泳[およ]いだ", "泳[およ]がった"],
+    correctIndex: 2,
+    explanation: "泳ぐ ends in ぐ, so its た-form voices to いだ: 泳いだ. 泳いた drops the required voicing, 泳んだ confuses it with a bu/mu-ending verb, and 泳がった isn't a real conjugation.",
+  },
+  {
+    id: "n5.ta-form.ex9",
+    grammarPointId: "n5.ta-form",
+    source: "bank",
+    kind: "ordering",
+    segments: ["友達[ともだち]を", "家[いえ]に", "呼[よ]んだ。"],
+    starIndex: 1,
+    translationEn: "I invited my friend to my house.",
+  },
+  {
+    id: "n5.ta-form.ex10",
+    grammarPointId: "n5.ta-form",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "先週[せんしゅう]、手紙[てがみ]を書[か]きました。",
+    instruction: "Rewrite in the plain past (た形).",
+    targetLabel: "た形",
+    accepted: ["先週[せんしゅう]、手紙[てがみ]を書[か]いた。"],
+    translationEn: "I wrote a letter last week.",
+  },
+  {
+    id: "n5.ta-form.ex11",
+    grammarPointId: "n5.ta-form",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "今朝[けさ]、朝[あさ]ごはんを食[た]べた。",
+    instruction: "Rewrite in the plain past negative (なかった形).",
+    targetLabel: "なかった形",
+    accepted: ["今朝[けさ]、朝[あさ]ごはんを食[た]べなかった。"],
+    translationEn: "I didn't eat breakfast this morning.",
+  },
+
+  // -------------------------------------------------------------------
+  // n5.te-iru
+  // -------------------------------------------------------------------
+  {
+    id: "n5.te-iru.ex8",
+    grammarPointId: "n5.te-iru",
+    source: "bank",
+    kind: "mcq",
+    question: "山田[やまだ]さんは今[いま]、傘[かさ]を＿＿。",
+    choices: ["持[も]ちます", "持[も]った", "持[も]たない", "持[も]っています"],
+    correctIndex: 3,
+    explanation: "〜ている describes the current state of holding something; 持ちます is a future/habitual statement, 持った is simple past, and 持たない is a negative — none describe the present state.",
+  },
+  {
+    id: "n5.te-iru.ex9",
+    grammarPointId: "n5.te-iru",
+    source: "bank",
+    kind: "ordering",
+    segments: ["弟[おとうと]は", "今[いま]", "部屋[へや]で", "勉強[べんきょう]しています。"],
+    starIndex: 2,
+    translationEn: "My younger brother is studying in his room now.",
+  },
+  {
+    id: "n5.te-iru.ex10",
+    grammarPointId: "n5.te-iru",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "私[わたし]は今[いま]、晩[ばん]ごはんを作[つく]ります。",
+    instruction: "Rewrite to show the action is in progress right now, using 〜ています.",
+    targetLabel: "〜ている",
+    accepted: ["私[わたし]は今[いま]、晩[ばん]ごはんを作[つく]っています。", "私[わたし]は今[いま]、晩[ばん]ごはんを作[つく]っている。"],
+    translationEn: "I am making dinner now.",
+  },
+  {
+    id: "n5.te-iru.ex11",
+    grammarPointId: "n5.te-iru",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "電気[でんき]が消[き]えた。",
+    instruction: "Rewrite to describe the resulting state using 〜ている.",
+    targetLabel: "〜ている",
+    accepted: ["電気[でんき]が消[き]えている。", "電気[でんき]が消[き]えています。"],
+    translationEn: "The light is off.",
+  },
+
+  // -------------------------------------------------------------------
+  // n5.mashou-masen-ka
+  // -------------------------------------------------------------------
+  {
+    id: "n5.mashou-masen-ka.ex8",
+    grammarPointId: "n5.mashou-masen-ka",
+    source: "bank",
+    kind: "mcq",
+    question: "大変[たいへん]そうですね。＿＿。",
+    choices: ["手伝[てつだ]いましょうか", "手伝[てつだ]いませんか", "手伝[てつだ]いました", "手伝[てつだ]いたいです"],
+    correctIndex: 0,
+    explanation: "Offering to do something for someone ('shall I ~?') uses 〜ましょうか; 〜ませんか would instead invite the listener to help, and the other two are plain statements, not offers.",
+  },
+  {
+    id: "n5.mashou-masen-ka.ex9",
+    grammarPointId: "n5.mashou-masen-ka",
+    source: "bank",
+    kind: "ordering",
+    segments: ["みんなで", "写真[しゃしん]を", "撮[と]りましょう。"],
+    starIndex: 1,
+    translationEn: "Let's all take a photo together.",
+  },
+  {
+    id: "n5.mashou-masen-ka.ex10",
+    grammarPointId: "n5.mashou-masen-ka",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "教室[きょうしつ]の窓[まど]を開[あ]けます。",
+    instruction: "Rewrite as a 'let's ~' suggestion using 〜ましょう.",
+    targetLabel: "〜ましょう",
+    accepted: ["教室[きょうしつ]の窓[まど]を開[あ]けましょう。"],
+    translationEn: "Let's open the classroom window.",
+  },
+  {
+    id: "n5.mashou-masen-ka.ex11",
+    grammarPointId: "n5.mashou-masen-ka",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "土曜日[どようび]に美術館[びじゅつかん]へ行[い]きます。",
+    instruction: "Rewrite as a polite invitation using 〜ませんか.",
+    targetLabel: "〜ませんか",
+    accepted: ["土曜日[どようび]に美術館[びじゅつかん]へ行[い]きませんか。", "土曜日[どようび]に美術館[びじゅつかん]に行[い]きませんか。"],
+    translationEn: "Won't you go to the art museum on Saturday?",
+  },
+
+  // -------------------------------------------------------------------
+  // n5.ni-iku
+  // -------------------------------------------------------------------
+  {
+    id: "n5.ni-iku.ex8",
+    grammarPointId: "n5.ni-iku",
+    source: "bank",
+    kind: "mcq",
+    question: "海[うみ]へ＿＿行[い]きます。",
+    choices: ["泳[およ]いで", "泳[およ]ぐに", "泳[およ]ぎに", "泳[およ]ぎで"],
+    correctIndex: 2,
+    explanation: "The purpose verb attaches to 行く via ます-stem + に: 泳ぎに. 泳いで is the て-form (wrong pattern), 泳ぐに wrongly attaches に to the dictionary form, and 泳ぎで uses the wrong particle.",
+  },
+  {
+    id: "n5.ni-iku.ex9",
+    grammarPointId: "n5.ni-iku",
+    source: "bank",
+    kind: "ordering",
+    segments: ["郵便局[ゆうびんきょく]へ", "手紙[てがみ]を", "出[だ]しに", "行[い]きます。"],
+    starIndex: 2,
+    translationEn: "I'm going to the post office to mail a letter.",
+  },
+  {
+    id: "n5.ni-iku.ex10",
+    grammarPointId: "n5.ni-iku",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "デパートへ服[ふく]を買[か]いに行[い]きます。",
+    instruction: "Rewrite in the past tense (the movement verb only).",
+    targetLabel: "〜に行きました",
+    accepted: ["デパートへ服[ふく]を買[か]いに行[い]きました。", "デパートに服[ふく]を買[か]いに行[い]きました。"],
+    translationEn: "I went to the department store to buy clothes.",
+  },
+  {
+    id: "n5.ni-iku.ex11",
+    grammarPointId: "n5.ni-iku",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "友達[ともだち]の家[いえ]へ遊[あそ]びに行[い]きます。",
+    instruction: "Rewrite in the negative (the movement verb only).",
+    targetLabel: "〜に行きません",
+    accepted: ["友達[ともだち]の家[いえ]へ遊[あそ]びに行[い]きません。", "友達[ともだち]の家[いえ]に遊[あそ]びに行[い]きません。"],
+    translationEn: "I'm not going to my friend's house to hang out.",
+  },
+
+  // -------------------------------------------------------------------
+  // n5.naide-kudasai
+  // -------------------------------------------------------------------
+  {
+    id: "n5.naide-kudasai.ex8",
+    grammarPointId: "n5.naide-kudasai",
+    source: "bank",
+    kind: "mcq",
+    question: "危[あぶ]ないですから、ここで＿＿ください。",
+    choices: ["泳[およ]いでいないで", "泳[およ]がなくて", "泳[およ]ぎないで", "泳[およ]がないで"],
+    correctIndex: 3,
+    explanation: "泳ぐ's ない-form is 泳がない (a-row shift), so the negative request is 泳がないでください. The other choices are not valid ない-form conjugations of 泳ぐ.",
+  },
+  {
+    id: "n5.naide-kudasai.ex9",
+    grammarPointId: "n5.naide-kudasai",
+    source: "bank",
+    kind: "ordering",
+    segments: ["ここに", "座[すわ]らないで", "ください。"],
+    starIndex: 1,
+    translationEn: "Please don't sit here.",
+  },
+  {
+    id: "n5.naide-kudasai.ex10",
+    grammarPointId: "n5.naide-kudasai",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "この窓[まど]を閉[し]めてください。",
+    instruction: "Rewrite as a negative request (please don't ~).",
+    targetLabel: "〜ないでください",
+    accepted: ["この窓[まど]を閉[し]めないでください。"],
+    translationEn: "Please don't close this window.",
+  },
+  {
+    id: "n5.naide-kudasai.ex11",
+    grammarPointId: "n5.naide-kudasai",
+    source: "bank",
+    kind: "transformation",
+    sourceJa: "ここで遊[あそ]ばないで。",
+    instruction: "Rewrite as a polite request using 〜ないでください.",
+    targetLabel: "〜ないでください",
+    accepted: ["ここで遊[あそ]ばないでください。"],
+    translationEn: "Please don't play here.",
+  },
+];
