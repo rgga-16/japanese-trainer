@@ -1,0 +1,204 @@
+/* Reading comprehension (読解): ReadingView (list + back-link) and
+   ReadingRunner (passage + all 3 questions on one screen). Reuses .card,
+   .browse-list/.browse-row-*, .lesson-chip/.lesson-back, .mcq-choices/
+   .mcq-choice(-num), .feedback-*, and .session-score from global.css /
+   browse.css / session.css rather than redefining that chrome. */
+
+.reading-runner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reading-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reading-title {
+  margin: 0;
+}
+
+/* Passage body: generous line-height + paragraph spacing so ruby furigana
+   (which grows the effective line-box height) never crowds the line below
+   it or the previous paragraph. This is the #1 thing to check visually
+   whenever furiganaMode is "always". */
+.reading-passage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1em;
+  font-size: 1.1rem;
+}
+
+.reading-paragraph {
+  margin: 0;
+  line-height: 2.5;
+}
+
+.reading-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reading-question {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.reading-question-text {
+  display: block;
+  font-size: 1.1rem;
+  /* Same ruby-breathing-room concern as the passage, at a slightly tighter
+     scale since these sit inside a card alongside choices. */
+  line-height: 2.1;
+}
+
+/* Reuses .mcq-choice/.mcq-choice-num for layout; only the graded states
+   (correct/incorrect/selected) are added here. */
+.reading-choice {
+  line-height: 1.9;
+}
+
+.reading-choice-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.reading-choice-correct {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.reading-choice-incorrect {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.reading-choice:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.reading-submit {
+  align-self: center;
+}
+
+.reading-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.reading-summary-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ReadingView: list + back-link */
+
+.reading-view-active {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reading-back-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.reading-back-btn:hover {
+  border: none;
+}
+
+.reading-list-intro {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.reading-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  width: 100%;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  flex-wrap: wrap;
+}
+
+.reading-list-row:last-child {
+  border-bottom: none;
+}
+
+.reading-list-row:hover {
+  border-color: var(--border);
+  background: var(--bg-inset);
+}
+
+.reading-list-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.reading-attempted-chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .reading-title {
+    font-size: 1.3rem;
+  }
+
+  .reading-passage {
+    font-size: 1rem;
+  }
+
+  .reading-question-text {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .reading-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reading-summary-actions {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .reading-summary-actions button {
+    width: 100%;
+  }
+}
