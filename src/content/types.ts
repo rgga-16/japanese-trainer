@@ -94,11 +94,31 @@ export interface OrderingExercise extends ExerciseBase {
   tail?: string;
 }
 
+export interface TransformationExercise extends ExerciseBase {
+  /**
+   * 変換: rewrite a whole sentence into a target form. Distinct from cloze in
+   * that the learner produces the ENTIRE sentence, not just a gap filler.
+   */
+  kind: "transformation";
+  /** The sentence to rewrite, furigana notation. No gap marker. */
+  sourceJa: string;
+  /** English instruction, e.g. "Rewrite using the potential form." */
+  instruction: string;
+  /** Japanese form label shown as a chip, e.g. "可能形". */
+  targetLabel?: string;
+  /** Full rewritten sentences, furigana notation; kana variants derived automatically. */
+  accepted: string[];
+  /** Meaning of the TARGET (rewritten) sentence, not the source. */
+  translationEn: string;
+  hint?: string;
+}
+
 export type Exercise =
   | TranslationExercise
   | ClozeExercise
   | McqExercise
-  | OrderingExercise;
+  | OrderingExercise
+  | TransformationExercise;
 
 // ---------------------------------------------------------------------------
 // Conjugation forms (used by engine/conjugator.ts, templates, drills)
@@ -190,6 +210,109 @@ export interface MockPassage {
   title: string;
   /** Paragraphs in furigana notation; gap positions marked ［1］, ［2］ … */
   paragraphsJa: string[];
-  /** One MCQ per numbered gap, in order. */
+  /** One MCQ per numbered gap, in order. EXACTLY 5 gaps; the mock's 問題3 sizing depends on it. */
   gaps: McqExercise[];
+}
+
+// ---------------------------------------------------------------------------
+// Reading comprehension (読解)
+// ---------------------------------------------------------------------------
+
+/**
+ * Deliberately NOT an `Exercise`: a passage carries several questions, which
+ * breaks the flat union's "1 exercise = 1 graded answer = 1 ExerciseResult"
+ * assumption that SessionRunner's progress bar and result indexing rely on.
+ * Reading is graded by ReadingRunner and recorded with the `meta.reading`
+ * grammarPointId sentinel. See CONTENT_GUIDE.md.
+ */
+export interface ReadingQuestion {
+  /** "<passageId>.q<N>" — unique. */
+  id: string;
+  /** Comprehension question, furigana notation. */
+  question: string;
+  /** Exactly 4 unique choices (furigana notation). */
+  choices: string[];
+  correctIndex: number;
+  explanation?: string;
+}
+
+export interface ReadingPassage {
+  /** "reading.<slug>" — unique. */
+  id: string;
+  title: string;
+  level: Level;
+  /** Paragraphs in furigana notation. No gap markers — this is comprehension. */
+  paragraphsJa: string[];
+  /** EXACTLY 3 questions; the mock's 読解 section sizing depends on it. */
+  questions: ReadingQuestion[];
+  /** Optional "this passage leans on these points"; ids must resolve. */
+  focusPointIds?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Vocabulary questions (文字・語彙)
+// ---------------------------------------------------------------------------
+
+/**
+ * Standalone like ReadingQuestion — vocab items don't belong to a grammar
+ * point. Recorded with the `meta.vocab` sentinel.
+ */
+export interface VocabQuestion {
+  /** "vq.<slug>" — unique. */
+  id: string;
+  /**
+   * reading = 漢字読み (read the kanji word) · orthography = pick the right kanji
+   * · context = ＿＿ gap, pick the fitting word · paraphrase = closest meaning.
+   *
+   * NOTE for `reading`: the prompt is authored WITH furigana brackets so the
+   * validator works, so the renderer MUST force furigana mode "hidden" or the
+   * answer prints above the word.
+   *
+   * NOTE for `orthography`: it's the CHOICES, not the prompt, that carry
+   * furigana brackets — the prompt writes the target word in bare kana, and
+   * each kanji-spelling choice is authored with its own reading (see
+   * src/content/vocabq/batch1.ts). The renderer MUST suppress ruby on the
+   * choices here or the question is trivially solvable without any kanji
+   * knowledge.
+   */
+  style: "reading" | "orthography" | "context" | "paraphrase";
+  level: Level;
+  /** Furigana notation; contains one ＿＿ gap when style === "context". */
+  question: string;
+  /** Exactly 4 unique choices. */
+  choices: string[];
+  correctIndex: number;
+  explanation?: string;
+  /** Optional back-references into allVocab; ids must resolve. */
+  vocabIds?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Drill content (engine/drills/*)
+// ---------------------------------------------------------------------------
+
+export interface ParticleDrillItem {
+  /** "pd.<slug>" — unique. */
+  id: string;
+  /** Furigana notation with exactly one ＿＿ gap where the particle goes. */
+  sentence: string;
+  /** The correct particle, e.g. "に". Kana only. */
+  answer: string;
+  /** Optional hand-picked distractors; defaults to the shared particle set. */
+  distractors?: string[];
+  translationEn: string;
+  level: Level;
+  /** Optional note explaining why this particle and not the near-miss. */
+  note?: string;
+}
+
+export interface TransitivityPair {
+  /** "tp.<slug>" — unique. */
+  id: string;
+  /** Transitive (他動詞) member, e.g. 開[あ]ける — takes を. */
+  transitive: { ja: string; en: string };
+  /** Intransitive (自動詞) member, e.g. 開[あ]く — takes が. */
+  intransitive: { ja: string; en: string };
+  /** Optional disambiguation note shown in feedback. */
+  note?: string;
 }
