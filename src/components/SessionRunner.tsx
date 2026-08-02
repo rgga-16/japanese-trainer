@@ -8,6 +8,7 @@ import "../styles/session.css";
 import ClozeExercise from "./exercises/ClozeExercise";
 import McqExercise from "./exercises/McqExercise";
 import OrderingExercise from "./exercises/OrderingExercise";
+import TransformationExercise from "./exercises/TransformationExercise";
 import TranslationExercise from "./exercises/TranslationExercise";
 import FeedbackPanel from "./FeedbackPanel";
 import {
@@ -104,6 +105,8 @@ function promptLabel(ex: Exercise): string {
     case "mcq":
       return stripFurigana(ex.question);
     case "ordering":
+      return ex.translationEn;
+    case "transformation":
       return ex.translationEn;
   }
 }
@@ -320,8 +323,26 @@ export default function SessionRunner({
                   }}
                 />
               );
-            default:
-              return null;
+            case "transformation":
+              return (
+                <TransformationExercise
+                  key={exercise.id}
+                  exercise={exercise}
+                  furiganaMode={furiganaMode}
+                  disabled={feedback !== null}
+                  onAnswer={(value) => {
+                    const fb = gradeTypedAnswer(exercise.accepted, value);
+                    recordAndShowFeedback(exercise, fb.correct, fb);
+                  }}
+                />
+              );
+            default: {
+              // Exhaustiveness guard: a new Exercise kind must be registered
+              // here. Without it TypeScript stays silent and the card renders
+              // blank at runtime instead of failing the build.
+              const unhandled: never = exercise;
+              return unhandled;
+            }
           }
         })()}
       </div>
