@@ -3,12 +3,33 @@
 
 import type { Exercise } from "../content/types";
 
-export type StudyMode = "practice" | "review" | "drill" | "mock";
+export type StudyMode = "practice" | "review" | "drill" | "mock" | "reading";
+
+/**
+ * Sentinel `grammarPointId`s for items that legitimately belong to no grammar
+ * point (reading comprehension, 文字・語彙). Safe because every consumer looks
+ * points up through `grammarPointById` and null-guards the miss, and real ids
+ * always match /^n[45]\./ so these can never collide.
+ */
+export const META_READING_POINT_ID = "meta.reading";
+export const META_VOCAB_POINT_ID = "meta.vocab";
 
 export interface ExerciseResult {
   exerciseId: string;
   grammarPointId: string;
-  kind: Exercise["kind"] | "conjugation";
+  /**
+   * `Exercise["kind"]` widens automatically as content kinds are added; the
+   * drill/reading/vocab members are hand-maintained. Widening is safe for
+   * persisted data — this is a read-position union over existing strings.
+   */
+  kind:
+    | Exercise["kind"]
+    | "conjugation"
+    | "particle"
+    | "vocab-recall"
+    | "transitivity"
+    | "reading"
+    | "vocab";
   correct: boolean;
   /** ISO datetime */
   at: string;
@@ -35,18 +56,32 @@ export interface MockSectionScore {
   total: number;
 }
 
+/** Mock section identities. `passage` was called `cloze` in v1 — see migrations[1]. */
+export type MockSectionKey =
+  | "vocab"
+  | "completion"
+  | "ordering"
+  | "passage"
+  | "reading";
+
 export interface MockResult {
   /** ISO datetime */
   at: string;
   score: number;
   max: number;
-  perSection: {
-    completion: MockSectionScore;
-    ordering: MockSectionScore;
-    cloze: MockSectionScore;
-  };
+  /**
+   * Open-keyed: only the sections the paper actually contained are present, so
+   * every read MUST be optional (`perSection.passage?.correct ?? 0`).
+   */
+  perSection: Partial<Record<MockSectionKey, MockSectionScore>>;
   durationSec: number;
   wrongQuestionIds: string[];
+  /** Additive; absent on pre-v2 records (backfilled to "standard" when max === 25). */
+  formatId?: string;
+  /** Set when the attempt was a named preset paper ("paper.1" … "paper.6"). */
+  paperId?: string;
+  /** CONTENT_REVISION at the time of the attempt; flags preset-paper drift. */
+  contentRevision?: number;
 }
 
 export interface DrillStat {
@@ -79,14 +114,21 @@ export interface StoredData {
   srs: Record<string, SrsState>;
   /** Ring buffer, newest last, capped at 2000. */
   history: ExerciseResult[];
-  /** Key: `${verbClass}:${form}` (or `adj:${form}` for adjectives). */
+  /**
+   * Drill accuracy buckets. These raw keys ARE the schema — they carry no
+   * version marker and there is no migration path, so existing conjugation
+   * keys (`${verbClass}:${form}` for verbs, `${pos}:${form}` for adjectives,
+   * e.g. "godan:te", "i-adj:past") must never be renamed. New drills are
+   * namespaced instead: "particle:に", "vocab:ja-en", "transitivity:to-transitive".
+   */
   drillStats: Record<string, DrillStat>;
   mockResults: MockResult[];
   stats: StreakStats;
   settings: AppSettings;
 }
 
-export const SCHEMA_VERSION = 1;
+/** v2: MockResult.perSection went open-keyed and `cloze` was renamed `passage`. */
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   furiganaMode: "always",
