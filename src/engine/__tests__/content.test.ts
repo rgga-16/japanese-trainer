@@ -6,13 +6,25 @@ import { describe, expect, it } from "vitest";
 import {
   allExercises,
   allGrammarPoints,
+  allParticleItems,
   allPassages,
+  allReadingPassages,
   allTemplates,
+  allTransitivityPairs,
   allVocab,
+  allVocabQuestions,
   grammarPointById,
 } from "../../content";
 import { parseFurigana } from "../furigana";
-import type { Exercise, VocabEntry } from "../../content/types";
+import type {
+  ClozeExercise,
+  Exercise,
+  McqExercise,
+  OrderingExercise,
+  TransformationExercise,
+  TranslationExercise,
+  VocabEntry,
+} from "../../content/types";
 
 // ---------------------------------------------------------------------------
 // Furigana well-formedness helper
@@ -172,37 +184,63 @@ describe("exercises", () => {
     }
   });
 
+  it("transformation exercises have at least one accepted answer", () => {
+    for (const ex of allExercises) {
+      if (ex.kind === "transformation") {
+        expect(ex.accepted.length, `accepted for "${ex.id}"`).toBeGreaterThanOrEqual(1);
+      }
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Furigana field map — a `Record` over `Exercise["kind"]` rather than a
+  // `switch`. A `switch` with no `default` silently skips validation for a
+  // newly added exercise kind (that's exactly how `transformation` could
+  // have slipped through unnoticed); a `Record` needs every key populated,
+  // so TypeScript raises a compile-time error the moment a new kind is
+  // added to the `Exercise` union without a matching entry here.
+  //
+  // Each function's parameter type is intentionally narrowed to its own
+  // exercise variant (not `never`) so a typo in a field name is still
+  // caught — the outer `Record<..., (ex: never) => JaFields>` annotation
+  // only needs `never` to make each narrower function assignable to a
+  // common shape; callers pass the real `Exercise` value cast `as never`
+  // to invoke it, which is the standard shape for this exhaustiveness idiom.
+  //
+  // `instruction` (transformation) is excluded: it's English prose, not
+  // Japanese content. `targetLabel` (transformation) is excluded for the
+  // same reason `title`/`formation` are exempt above: it's a bare Japanese
+  // gloss/chip label (e.g. "可能形"), not full sentence content.
+  // ---------------------------------------------------------------------
+
+  type JaFields = Array<[string | undefined, string]>;
+
+  const JA_FIELDS: Record<Exercise["kind"], (ex: never) => JaFields> = {
+    translation: (ex: TranslationExercise): JaFields =>
+      ex.accepted.map((a, i): [string, string] => [a, `${ex.id}.accepted[${i}]`]),
+    cloze: (ex: ClozeExercise): JaFields => [
+      [ex.sentence, `${ex.id}.sentence`],
+      ...ex.accepted.map((a, i): [string, string] => [a, `${ex.id}.accepted[${i}]`]),
+    ],
+    mcq: (ex: McqExercise): JaFields => [
+      [ex.question, `${ex.id}.question`],
+      ...ex.choices.map((c, i): [string, string] => [c, `${ex.id}.choices[${i}]`]),
+    ],
+    ordering: (ex: OrderingExercise): JaFields => [
+      ...ex.segments.map((s, i): [string, string] => [s, `${ex.id}.segments[${i}]`]),
+      [ex.lead, `${ex.id}.lead`],
+      [ex.tail, `${ex.id}.tail`],
+    ],
+    transformation: (ex: TransformationExercise): JaFields => [
+      [ex.sourceJa, `${ex.id}.sourceJa`],
+      ...ex.accepted.map((a, i): [string, string] => [a, `${ex.id}.accepted[${i}]`]),
+    ],
+  };
+
   it("have well-formed furigana in every Japanese-bearing field", () => {
     const issues: string[] = [];
     for (const ex of allExercises) {
-      const fields: Array<[string | undefined, string]> = [];
-      switch (ex.kind) {
-        case "translation":
-          ex.accepted.forEach((a, i) => {
-            fields.push([a, `${ex.id}.accepted[${i}]`]);
-          });
-          break;
-        case "cloze":
-          fields.push([ex.sentence, `${ex.id}.sentence`]);
-          ex.accepted.forEach((a, i) => {
-            fields.push([a, `${ex.id}.accepted[${i}]`]);
-          });
-          break;
-        case "mcq":
-          fields.push([ex.question, `${ex.id}.question`]);
-          ex.choices.forEach((c, i) => {
-            fields.push([c, `${ex.id}.choices[${i}]`]);
-          });
-          break;
-        case "ordering":
-          ex.segments.forEach((s, i) => {
-            fields.push([s, `${ex.id}.segments[${i}]`]);
-          });
-          fields.push([ex.lead, `${ex.id}.lead`]);
-          fields.push([ex.tail, `${ex.id}.tail`]);
-          break;
-      }
-      issues.push(...collectFuriganaIssues(fields));
+      issues.push(...collectFuriganaIssues(JA_FIELDS[ex.kind](ex as never)));
     }
     expect(issues, issues.join("\n")).toEqual([]);
   });
@@ -265,7 +303,7 @@ describe("vocab", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Templates (currently empty — must not crash on an empty array)
+// Templates (populated: 14 hand-authored templates)
 // ---------------------------------------------------------------------------
 
 describe("templates", () => {
@@ -304,27 +342,354 @@ describe("templates", () => {
     }
   });
 
-  it("handles an empty template bank without error", () => {
+  it("is an array of ExerciseTemplate", () => {
     expect(Array.isArray(allTemplates)).toBe(true);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Mock passages (currently empty — must not crash on an empty array)
+// Mock passages (populated: 10 hand-authored N4 passages — 4 in
+// src/content/mock/passages.ts + 6 in src/content/mock/passages2.ts — 5 gaps
+// each)
 // ---------------------------------------------------------------------------
 
 describe("mock passages", () => {
-  it("handles an empty passage bank without error", () => {
+  it("is an array of MockPassage", () => {
     expect(Array.isArray(allPassages)).toBe(true);
   });
 
-  it("gap MCQs (if any) are individually valid", () => {
-    for (const passage of allPassages) {
-      for (const gap of passage.gaps) {
-        expect(gap.choices.length, `${passage.id} gap "${gap.id}" choices`).toBe(4);
-        expect(new Set(gap.choices).size, `${passage.id} gap "${gap.id}" unique choices`).toBe(4);
+  it("have unique ids", () => {
+    const ids = allPassages.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("have exactly 5 gaps each (the mock's 問題3 sizing depends on it)", () => {
+    for (const p of allPassages) {
+      expect(p.gaps.length, `gaps for "${p.id}"`).toBe(5);
+    }
+  });
+
+  // Checks the numbers themselves, not just how many there are: a duplicated
+  // ［2］ with no ［3］ has the right count but leaves one gap unreachable in
+  // the rendered passage and renders the other twice.
+  it("paragraphsJa mark ［1］…［N］ exactly once each, matching gaps.length", () => {
+    for (const p of allPassages) {
+      const markers = (p.paragraphsJa.join("").match(/［(\d+)］/g) ?? []).map(
+        (m) => Number(m.slice(1, -1)),
+      );
+      const expected = p.gaps.map((_, i) => i + 1);
+      expect([...markers].sort((a, b) => a - b), `［N］ markers for "${p.id}"`).toEqual(
+        expected,
+      );
+    }
+  });
+
+  it("have well-formed furigana in paragraphsJa", () => {
+    const issues: string[] = [];
+    for (const p of allPassages) {
+      p.paragraphsJa.forEach((para, i) => {
+        issues.push(...furiganaIssues(para, `${p.id}.paragraphsJa[${i}]`));
+      });
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+
+  // Regression test for a fixed content defect: every one of the original 20
+  // authored gaps hard-coded correctIndex: 0, so in 問題3 the correct choice
+  // was always the FIRST button. The mock builder now shuffles choices at
+  // runtime, but the authored content must vary too — otherwise any consumer
+  // that doesn't shuffle inherits the tell. Keep this assertion so the
+  // all-zero pattern can't creep back in with a future passage batch.
+  it("passage gaps use at least 3 distinct correctIndex values", () => {
+    const indices = new Set(allPassages.flatMap((p) => p.gaps.map((g) => g.correctIndex)));
+    expect(indices.size, `distinct correctIndex values: ${[...indices].join(", ")}`).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reading comprehension (読解)
+// ---------------------------------------------------------------------------
+
+describe("reading passages", () => {
+  it("is an array of ReadingPassage", () => {
+    expect(Array.isArray(allReadingPassages)).toBe(true);
+  });
+
+  it("have unique ids", () => {
+    const ids = allReadingPassages.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("have exactly 3 questions each (the mock's 読解 sizing depends on it)", () => {
+    for (const p of allReadingPassages) {
+      expect(p.questions.length, `questions for "${p.id}"`).toBe(3);
+    }
+  });
+
+  it('question ids follow "<passageId>.q<N>"', () => {
+    for (const p of allReadingPassages) {
+      p.questions.forEach((q, i) => {
+        expect(q.id, `question id at "${p.id}" index ${i}`).toBe(`${p.id}.q${i + 1}`);
+      });
+    }
+  });
+
+  it("focusPointIds (if present) resolve to real grammar points", () => {
+    for (const p of allReadingPassages) {
+      for (const pointId of p.focusPointIds ?? []) {
+        expect(grammarPointById.has(pointId), `"${p.id}".focusPointIds -> "${pointId}"`).toBe(true);
       }
     }
+  });
+
+  it("have well-formed furigana in paragraphs and questions", () => {
+    const issues: string[] = [];
+    for (const p of allReadingPassages) {
+      p.paragraphsJa.forEach((para, i) => {
+        issues.push(...furiganaIssues(para, `${p.id}.paragraphsJa[${i}]`));
+      });
+      for (const q of p.questions) {
+        issues.push(...furiganaIssues(q.question, `${q.id}.question`));
+        q.choices.forEach((c, i) => {
+          issues.push(...furiganaIssues(c, `${q.id}.choices[${i}]`));
+        });
+      }
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Vocabulary questions (文字・語彙)
+// ---------------------------------------------------------------------------
+
+describe("vocab questions", () => {
+  const VALID_STYLES = new Set(["reading", "orthography", "context", "paraphrase"]);
+
+  it("is an array of VocabQuestion", () => {
+    expect(Array.isArray(allVocabQuestions)).toBe(true);
+  });
+
+  it("have unique ids", () => {
+    const ids = allVocabQuestions.map((q) => q.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("have a valid style", () => {
+    for (const q of allVocabQuestions) {
+      expect(VALID_STYLES.has(q.style), `style for "${q.id}"`).toBe(true);
+    }
+  });
+
+  it("vocabIds (if present) resolve to real vocab entries", () => {
+    const vocabIds = new Set(allVocab.map((v) => v.id));
+    for (const q of allVocabQuestions) {
+      for (const vocabId of q.vocabIds ?? []) {
+        expect(vocabIds.has(vocabId), `"${q.id}".vocabIds -> "${vocabId}"`).toBe(true);
+      }
+    }
+  });
+
+  it('style === "context" questions have exactly one ＿＿ gap', () => {
+    for (const q of allVocabQuestions) {
+      if (q.style === "context") {
+        const gapCount = (q.question.match(/＿＿/g) ?? []).length;
+        expect(gapCount, `gap count for "${q.id}"`).toBe(1);
+      }
+    }
+  });
+
+  it("have well-formed furigana in question and choices", () => {
+    const issues: string[] = [];
+    for (const q of allVocabQuestions) {
+      issues.push(...furiganaIssues(q.question, `${q.id}.question`));
+      q.choices.forEach((c, i) => {
+        issues.push(...furiganaIssues(c, `${q.id}.choices[${i}]`));
+      });
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Particle drill items (助詞)
+// ---------------------------------------------------------------------------
+
+describe("particle drill items", () => {
+  it("handles an empty particle item bank without error", () => {
+    expect(Array.isArray(allParticleItems)).toBe(true);
+  });
+
+  it("have unique ids", () => {
+    const ids = allParticleItems.map((item) => item.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("have exactly one ＿＿ gap in sentence", () => {
+    for (const item of allParticleItems) {
+      const gapCount = (item.sentence.match(/＿＿/g) ?? []).length;
+      expect(gapCount, `gap count for "${item.id}"`).toBe(1);
+    }
+  });
+
+  it("answer is kana-only", () => {
+    for (const item of allParticleItems) {
+      expect(item.answer, `answer for "${item.id}" ("${item.answer}") must be kana-only`).toMatch(HIRAGANA_ONLY);
+    }
+  });
+
+  it("distractors (if present) exclude the answer and are unique", () => {
+    for (const item of allParticleItems) {
+      if (item.distractors) {
+        expect(item.distractors, `distractors for "${item.id}" must not include the answer`).not.toContain(
+          item.answer
+        );
+        expect(new Set(item.distractors).size, `unique distractors for "${item.id}"`).toBe(item.distractors.length);
+      }
+    }
+  });
+
+  // Particle items are the one MCQ-shaped bank that bypasses the
+  // allMcqShapedItems() union below (their choices are assembled at build
+  // time, not authored), so this is the equivalent of that union's
+  // "exactly 4 unique choices" guard. buildParticleQuestions tops up from
+  // PARTICLE_SET so a short list can't render a 2-choice question, but the
+  // fallback picks blind — an authored distractor is chosen to be wrong in
+  // THAT sentence, so keep the bank self-sufficient.
+  it("author at least 3 distractors, so the PARTICLE_SET top-up never has to fire", () => {
+    for (const item of allParticleItems) {
+      expect(
+        item.distractors?.length ?? 0,
+        `distractors for "${item.id}" ("${item.sentence}")`,
+      ).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("have well-formed furigana in sentence", () => {
+    const issues: string[] = [];
+    for (const item of allParticleItems) {
+      issues.push(...furiganaIssues(item.sentence, `${item.id}.sentence`));
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Transitivity pairs (自他動詞)
+// ---------------------------------------------------------------------------
+
+describe("transitivity pairs", () => {
+  it("handles an empty transitivity pair bank without error", () => {
+    expect(Array.isArray(allTransitivityPairs)).toBe(true);
+  });
+
+  it("have unique ids", () => {
+    const ids = allTransitivityPairs.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("transitive and intransitive ja differ", () => {
+    for (const p of allTransitivityPairs) {
+      expect(p.transitive.ja, `"${p.id}" transitive/intransitive ja must differ`).not.toBe(p.intransitive.ja);
+    }
+  });
+
+  it("have well-formed furigana in both members", () => {
+    const issues: string[] = [];
+    for (const p of allTransitivityPairs) {
+      issues.push(...furiganaIssues(p.transitive.ja, `${p.id}.transitive.ja`));
+      issues.push(...furiganaIssues(p.intransitive.ja, `${p.id}.intransitive.ja`));
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MCQ-shaped items (cross-bank): mcq exercises, mock-passage gaps, vocab
+// questions, and reading-passage questions all share the same shape
+// (id/question/choices/correctIndex) but live in four different arrays.
+// Mock-passage gaps in particular are NOT part of `allExercises` (see the
+// `MockPassage` doc comment in content/types.ts), so without this union
+// they escape every furigana / id-uniqueness / correctIndex-bounds check.
+// Building the union from the live arrays (rather than snapshotting counts)
+// keeps this correct as any of the four banks keeps growing.
+// ---------------------------------------------------------------------------
+
+interface McqShaped {
+  id: string;
+  question: string;
+  choices: string[];
+  correctIndex: number;
+}
+
+function allMcqShapedItems(): McqShaped[] {
+  return [
+    ...allExercises.filter((ex): ex is McqExercise => ex.kind === "mcq"),
+    ...allPassages.flatMap((p) => p.gaps),
+    ...allVocabQuestions,
+    ...allReadingPassages.flatMap((p) => p.questions),
+  ];
+}
+
+describe("MCQ-shaped items (cross-bank: mcq exercises + passage gaps + vocab questions + reading questions)", () => {
+  it("is an array of MCQ-shaped items across all four banks", () => {
+    expect(Array.isArray(allMcqShapedItems())).toBe(true);
+  });
+
+  it("have unique ids across all four banks", () => {
+    const ids = allMcqShapedItems().map((item) => item.id);
+    const seen = new Map<string, number>();
+    for (const id of ids) seen.set(id, (seen.get(id) ?? 0) + 1);
+    const dupes = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+    expect(dupes, `duplicate ids: ${dupes.join(", ")}`).toEqual([]);
+  });
+
+  it("have exactly 4 unique choices and a valid correctIndex", () => {
+    for (const item of allMcqShapedItems()) {
+      expect(item.choices.length, `choices for "${item.id}"`).toBe(4);
+      expect(new Set(item.choices).size, `unique choices for "${item.id}"`).toBe(4);
+      expect(item.correctIndex, `correctIndex for "${item.id}"`).toBeGreaterThanOrEqual(0);
+      expect(item.correctIndex, `correctIndex for "${item.id}"`).toBeLessThan(item.choices.length);
+    }
+  });
+
+  it("have well-formed furigana in question and choices", () => {
+    const issues: string[] = [];
+    for (const item of allMcqShapedItems()) {
+      issues.push(...furiganaIssues(item.question, `${item.id}.question`));
+      item.choices.forEach((c, i) => {
+        issues.push(...furiganaIssues(c, `${item.id}.choices[${i}]`));
+      });
+    }
+    expect(issues, issues.join("\n")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cross-bank id uniqueness: nothing else checks that, say, a vocab question
+// id doesn't collide with an exercise id or a grammar point id — every bank
+// so far has only been checked for uniqueness WITHIN itself.
+// ---------------------------------------------------------------------------
+
+describe("cross-bank id uniqueness", () => {
+  it("no id collides across any content bank", () => {
+    const allIds: string[] = [
+      ...allGrammarPoints.map((p) => p.id),
+      ...allExercises.map((ex) => ex.id),
+      ...allVocab.map((v) => v.id),
+      ...allTemplates.map((tpl) => tpl.id),
+      ...allPassages.map((p) => p.id),
+      ...allPassages.flatMap((p) => p.gaps.map((g) => g.id)),
+      ...allReadingPassages.map((p) => p.id),
+      ...allReadingPassages.flatMap((p) => p.questions.map((q) => q.id)),
+      ...allVocabQuestions.map((q) => q.id),
+      ...allParticleItems.map((item) => item.id),
+      ...allTransitivityPairs.map((p) => p.id),
+    ];
+    const seen = new Map<string, number>();
+    for (const id of allIds) seen.set(id, (seen.get(id) ?? 0) + 1);
+    const dupes = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+    expect(dupes, `ids colliding across content banks: ${dupes.join(", ")}`).toEqual([]);
   });
 });
 
@@ -333,11 +698,49 @@ describe("mock passages", () => {
 // ---------------------------------------------------------------------------
 
 describe("content volume sanity check", () => {
-  it("has all 51 grammar points (18 seed + 33 batch 1)", () => {
-    expect(allGrammarPoints.length).toBe(51);
+  it("has at least 51 grammar points, with both N5 and N4 represented", () => {
+    expect(allGrammarPoints.length).toBeGreaterThanOrEqual(51);
+    expect(allGrammarPoints.some((p) => p.level === "N5"), "no N5 points found").toBe(true);
+    expect(allGrammarPoints.some((p) => p.level === "N4"), "no N4 points found").toBe(true);
   });
 
-  it("has 7 bank exercises per grammar point (357 total)", () => {
-    expect(allExercises.length).toBe(357);
+  it("every grammar point has exactly 11 bank exercises", () => {
+    for (const p of allGrammarPoints) {
+      const bank = exercisesForPoint(p.id).filter((ex) => ex.source === "bank");
+      expect(bank.length, `bank exercise count for "${p.id}"`).toBe(11);
+    }
+  });
+
+  // Floors, not exact counts: the intended mix is 2 translation / 2 cloze /
+  // 3 mcq / 2 ordering / 2 transformation, but CONTENT_GUIDE.md sanctions
+  // swapping the 2nd transformation for a 3rd cloze on pure particle and
+  // expression points, where "rewrite into form X" would be filler. Six
+  // points currently take that substitution, so `transformation` floors at 1
+  // and `cloze` can run to 3 while the total stays pinned at 11 above.
+  it("every grammar point meets the per-kind exercise floor", () => {
+    for (const p of allGrammarPoints) {
+      const bank = exercisesForPoint(p.id).filter((ex) => ex.source === "bank");
+      const countOf = (kind: Exercise["kind"]) => bank.filter((ex) => ex.kind === kind).length;
+      expect(countOf("translation"), `translation count for "${p.id}"`).toBeGreaterThanOrEqual(2);
+      expect(countOf("cloze"), `cloze count for "${p.id}"`).toBeGreaterThanOrEqual(2);
+      expect(countOf("mcq"), `mcq count for "${p.id}"`).toBeGreaterThanOrEqual(3);
+      expect(countOf("ordering"), `ordering count for "${p.id}"`).toBeGreaterThanOrEqual(2);
+      expect(countOf("transformation"), `transformation count for "${p.id}"`).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  // Derived canary (not a hardcoded multiplier): the grand total of bank
+  // exercises must equal the sum of each point's own bank count. This is
+  // exactly the check that catches "author added a grammar point but forgot
+  // its exercises" (or an exercise whose grammarPointId silently doesn't
+  // match any point it's supposed to be grouped under) without needing a
+  // hand-edited constant that has to be bumped on every content batch.
+  it("total bank exercises equals the sum of every point's own bank count", () => {
+    const totalBank = allExercises.filter((ex) => ex.source === "bank").length;
+    const perPointTotal = allGrammarPoints.reduce(
+      (sum, p) => sum + exercisesForPoint(p.id).filter((ex) => ex.source === "bank").length,
+      0
+    );
+    expect(totalBank, "total bank exercises vs. sum of per-point bank counts").toBe(perPointTotal);
   });
 });
