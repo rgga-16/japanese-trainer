@@ -7,6 +7,7 @@ const links = [
   { to: "/lessons", label: "Lessons" },
   { to: "/review", label: "Review" },
   { to: "/drills", label: "Drills" },
+  { to: "/reading", label: "Reading" },
   { to: "/mock", label: "Mock Test" },
   { to: "/settings", label: "Settings" },
 ];

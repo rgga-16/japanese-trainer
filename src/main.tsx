@@ -4,13 +4,14 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
 import { AppStateProvider } from "./state/AppStateContext";
 import "./styles/global.css";
-import ConjugationDrill from "./views/ConjugationDrill";
 import Dashboard from "./views/Dashboard";
+import DrillHub from "./views/DrillHub";
 import LessonBrowser from "./views/LessonBrowser";
 import LessonDetail from "./views/LessonDetail";
 import MockResults from "./views/MockResults";
 import MockTest from "./views/MockTest";
 import PracticeSession from "./views/PracticeSession";
+import ReadingView from "./views/ReadingView";
 import ReviewSession from "./views/ReviewSession";
 import Settings from "./views/Settings";
 import TestOut from "./views/TestOut";
@@ -26,7 +27,9 @@ const router = createHashRouter([
       { path: "practice/:id", element: <PracticeSession /> },
       { path: "testout/:id", element: <TestOut /> },
       { path: "review", element: <ReviewSession /> },
-      { path: "drills", element: <ConjugationDrill /> },
+      { path: "drills", element: <DrillHub /> },
+      { path: "drills/:drillId", element: <DrillHub /> },
+      { path: "reading", element: <ReadingView /> },
       { path: "mock", element: <MockTest /> },
       { path: "mock/results", element: <MockResults /> },
       { path: "settings", element: <Settings /> },

@@ -1,3 +1,60 @@
+.drill-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.drill-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+}
+
+.drill-tile:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.drill-tile h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.drill-tile p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.drill-tile-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.drill-tile-note {
+  font-style: italic;
+}
+
+.drill-back {
+  align-self: flex-start;
+  margin-bottom: 0.75rem;
+  color: var(--text-dim);
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+.drill-back:hover {
+  color: var(--accent);
+}
+
 .drill-setup h2 {
   font-size: 1rem;
   margin: 1.25rem 0 0.5rem;
@@ -109,6 +166,17 @@
   font-size: 1.3rem;
 }
 
+.drill-explanation {
+  margin: 0.5rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.drill-question .mcq-choices {
+  margin-top: 1rem;
+  text-align: left;
+}
+
 .drill-score {
   font-size: 1.5rem;
   font-weight: 700;
@@ -146,4 +214,22 @@
 .drill-actions {
   display: flex;
   gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  /* Two drill tiles side by side get too cramped to read the description. */
+  .drill-hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .drill-tile {
+    padding: 0.9rem 1rem;
+  }
+
+  /* Again/Change-settings sit side by side and overflow a 360px card. */
+  .drill-actions {
+    flex-wrap: wrap;
+  }
 }
