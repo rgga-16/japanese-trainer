@@ -1,10 +1,40 @@
 import { Link } from "react-router-dom";
+import { CONTENT_REVISION } from "../content";
+import {
+  MOCK_FORMATS,
+  MOCK_SECTION_LABELS,
+  MOCK_SECTION_ORDER,
+  type MockFormatId,
+} from "../engine/mockBuilder";
+import { MOCK_PAPERS } from "../engine/mockPapers";
 import { useAppState } from "../state/AppStateContext";
+import type { MockResult } from "../state/types";
 
 function formatDuration(totalSec: number): string {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+function isMockFormatId(id: string): id is MockFormatId {
+  return id === "short" || id === "standard" || id === "full";
+}
+
+/** Paper label ("模試1") when the attempt used a named paper, else the format
+ * label ("Standard"), else "—" for pre-v2 records that carry neither field. */
+function formatLabelFor(r: MockResult): string {
+  if (r.paperId) {
+    const paper = MOCK_PAPERS.find((p) => p.id === r.paperId);
+    if (paper) return paper.label;
+  }
+  if (r.formatId && isMockFormatId(r.formatId)) {
+    return MOCK_FORMATS[r.formatId].label;
+  }
+  return "—";
+}
+
+function isStale(r: MockResult): boolean {
+  return r.contentRevision !== undefined && r.contentRevision !== CONTENT_REVISION;
 }
 
 export default function MockResults() {
@@ -28,32 +58,51 @@ export default function MockResults() {
           <thead>
             <tr>
               <th>Date</th>
+              <th>Format</th>
               <th>Score</th>
-              <th>問題1</th>
-              <th>問題2</th>
-              <th>問題3</th>
+              {MOCK_SECTION_ORDER.map((key) => (
+                <th key={key}>{MOCK_SECTION_LABELS[key]}</th>
+              ))}
               <th>Duration</th>
             </tr>
           </thead>
           <tbody>
-            {attempts.map((r) => (
-              <tr key={r.at}>
-                <td>{new Date(r.at).toLocaleString()}</td>
-                <td>
-                  {r.score}/{r.max}
-                </td>
-                <td>
-                  {r.perSection.completion.correct}/{r.perSection.completion.total}
-                </td>
-                <td>
-                  {r.perSection.ordering.correct}/{r.perSection.ordering.total}
-                </td>
-                <td>
-                  {r.perSection.cloze.correct}/{r.perSection.cloze.total}
-                </td>
-                <td>{formatDuration(r.durationSec)}</td>
-              </tr>
-            ))}
+            {attempts.map((r, i) => {
+              const stale = r.paperId !== undefined && isStale(r);
+              return (
+                <tr
+                  // biome-ignore lint/suspicious/noArrayIndexKey: `at` alone can collide when malformed records both backfill to the epoch; index disambiguates a static, non-reordered list
+                  key={`${r.at}-${i}`}
+                  className={r.paperId ? "mock-table-row-paper" : undefined}
+                >
+                  <td>{new Date(r.at).toLocaleString()}</td>
+                  <td>
+                    {formatLabelFor(r)}
+                    {stale && (
+                      <span
+                        className="mock-table-stale"
+                        title="This paper's questions have changed since this attempt (content bank updated)."
+                      >
+                        {" "}
+                        ⚠
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {r.score}/{r.max}
+                  </td>
+                  {MOCK_SECTION_ORDER.map((key) => {
+                    const section = r.perSection[key];
+                    return (
+                      <td key={key}>
+                        {section ? `${section.correct}/${section.total}` : "—"}
+                      </td>
+                    );
+                  })}
+                  <td>{formatDuration(r.durationSec)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -2,10 +2,29 @@ import { Link } from "react-router-dom";
 import BackupReminderBanner from "../components/BackupReminderBanner";
 import Furigana from "../components/Furigana";
 import { allGrammarPoints, grammarPointById } from "../content";
+import { MOCK_FORMATS, type MockFormatId } from "../engine/mockBuilder";
+import { MOCK_PAPERS } from "../engine/mockPapers";
 import { buildReviewQueue, todayIso } from "../engine/srs";
 import { useAppState } from "../state/AppStateContext";
+import type { MockResult } from "../state/types";
 import { readiness, weakestPoints } from "../state/stats";
 import "../styles/browse.css";
+
+function isMockFormatId(id: string): id is MockFormatId {
+  return id === "short" || id === "standard" || id === "full";
+}
+
+/** Paper label ("模試1") when set, else the format label, else "—" for pre-v2 records. */
+function formatLabelFor(r: MockResult): string {
+  if (r.paperId) {
+    const paper = MOCK_PAPERS.find((p) => p.id === r.paperId);
+    if (paper) return paper.label;
+  }
+  if (r.formatId && isMockFormatId(r.formatId)) {
+    return MOCK_FORMATS[r.formatId].label;
+  }
+  return "—";
+}
 
 export default function Dashboard() {
   const { data } = useAppState();
@@ -144,7 +163,9 @@ export default function Dashboard() {
           <div className="card dash-mocks">
             {recentMocks.map((m) => (
               <div key={m.at} className="dash-mock-row">
-                <span>{new Date(m.at).toLocaleDateString()}</span>
+                <span>
+                  {new Date(m.at).toLocaleDateString()} · {formatLabelFor(m)}
+                </span>
                 <span>
                   {m.score} / {m.max}
                 </span>

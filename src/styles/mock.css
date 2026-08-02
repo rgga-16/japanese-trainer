@@ -28,6 +28,60 @@
   margin: 0;
 }
 
+.mock-start-error {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Intro pickers (format / named paper)                                   */
+/* ---------------------------------------------------------------------- */
+
+.mock-picker-section h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+
+.mock-format-grid,
+.mock-paper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.mock-format-card,
+.mock-paper-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+
+.mock-format-card:disabled,
+.mock-paper-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mock-format-title {
+  font-weight: 700;
+}
+
+.mock-format-meta {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.mock-format-unavailable {
+  color: var(--bad);
+  font-size: 0.8rem;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Test header / countdown                                                */
 /* ---------------------------------------------------------------------- */
@@ -299,6 +353,14 @@
 
 .mock-table-wrap {
   overflow-x: auto;
+}
+
+.mock-table-row-paper {
+  background: var(--accent-soft);
+}
+
+.mock-table-stale {
+  color: var(--warn, var(--bad));
 }
 
 .mock-results-empty {
