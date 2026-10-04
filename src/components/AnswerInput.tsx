@@ -13,6 +13,8 @@ export default function AnswerInput({ onSubmit, disabled, placeholder }: AnswerI
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     inputRef.current?.focus();
   }, []);
 
