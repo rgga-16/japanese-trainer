@@ -3,6 +3,7 @@ import BackupReminderBanner from "../components/BackupReminderBanner";
 import Furigana from "../components/Furigana";
 import { todayIso } from "../engine/srs";
 import { useAppState } from "../state/AppStateContext";
+import { saveBackupFile } from "../state/backupFile";
 import { exportJson, parseStoredJson } from "../state/storage";
 import type { FuriganaMode } from "../state/types";
 
@@ -27,16 +28,23 @@ export default function Settings() {
   );
   const [resetArmed, setResetArmed] = useState(false);
 
-  function handleExport() {
+  async function handleExport() {
     const json = exportJson(data);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `jlpt-n4-trainer-backup-${todayIso()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    updateSettings({ lastBackupAt: new Date().toISOString() });
+    const filename = `jlpt-n4-trainer-backup-${todayIso()}.json`;
+    try {
+      const result = await saveBackupFile(json, filename);
+      if (result === "saved") {
+        updateSettings({ lastBackupAt: new Date().toISOString() });
+      }
+    } catch (err) {
+      setImportMessage({
+        kind: "error",
+        text:
+          err instanceof Error
+            ? `Export failed: ${err.message}`
+            : "Export failed.",
+      });
+    }
   }
 
   async function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
@@ -126,9 +134,9 @@ export default function Settings() {
       <div className="card settings-card">
         <h2>Data</h2>
         <p className="settings-hint">
-          Your progress saves automatically in this browser as you study —
+          Your progress saves automatically on this device as you study —
           there's nothing to click. Export creates a backup file you can keep in
-          case this browser's data is ever cleared or you switch devices; Import
+          case this device's data is ever cleared or you switch devices; Import
           restores from one.
         </p>
         <BackupReminderBanner />
@@ -173,8 +181,8 @@ export default function Settings() {
 
       <p className="settings-about">
         文法 N4 Trainer runs entirely offline — nothing is ever sent off this
-        device. All progress lives in this browser's localStorage; clearing site
-        data or switching browsers will lose it unless you export a backup
+        device. All progress lives in local storage on this device; clearing
+        app data or switching devices will lose it unless you export a backup
         first.
       </p>
     </div>

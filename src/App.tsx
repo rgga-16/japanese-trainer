@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAppState } from "./state/AppStateContext";
+import { useNativeShell } from "./state/useNativeShell";
 
 const links = [
   { to: "/", label: "Dashboard", end: true },
@@ -43,6 +44,10 @@ function SavedIndicator() {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  useNativeShell(navigate, location);
+
   return (
     <div className="app-shell">
       <header className="app-header">
