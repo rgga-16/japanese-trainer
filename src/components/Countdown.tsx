@@ -21,26 +21,38 @@ function formatRemaining(totalSec: number): string {
 /** mm:ss countdown display. Fires onExpire once when it hits zero. */
 export default function Countdown({ seconds, onExpire, running }: CountdownProps) {
   const [remaining, setRemaining] = useState(seconds);
+  // Mirrors `remaining` so the running-effect can read the latest value
+  // without needing it in its dependency array (which would restart the
+  // interval — and reset the deadline — on every tick).
+  const remainingRef = useRef(seconds);
+  // Wall-clock timestamp the countdown reaches zero. Recomputed from the
+  // held `remaining` value whenever ticking (re)starts, so backgrounding
+  // (which throttles/suspends the interval) can't make the timer drift, and
+  // pausing/resuming freezes and resumes from the correct point.
+  const deadlineRef = useRef(Date.now() + seconds * 1000);
   const expiredRef = useRef(false);
   const onExpireRef = useRef(onExpire);
   onExpireRef.current = onExpire;
 
   useEffect(() => {
+    remainingRef.current = seconds;
     setRemaining(seconds);
     expiredRef.current = false;
+    deadlineRef.current = Date.now() + seconds * 1000;
   }, [seconds]);
 
   useEffect(() => {
     if (!running) return undefined;
+    deadlineRef.current = Date.now() + remainingRef.current * 1000;
     const id = window.setInterval(() => {
-      setRemaining((prev) => {
-        const next = prev - 1;
-        if (next <= 0 && !expiredRef.current) {
-          expiredRef.current = true;
-          onExpireRef.current();
-        }
-        return Math.max(0, next);
-      });
+      const rawRemaining = (deadlineRef.current - Date.now()) / 1000;
+      const next = Math.max(0, rawRemaining);
+      remainingRef.current = next;
+      setRemaining(next);
+      if (rawRemaining <= 0 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpireRef.current();
+      }
     }, 1000);
     return () => window.clearInterval(id);
   }, [running]);
