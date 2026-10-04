@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Logo only, transparent background, kept inside the ~66% safe zone so
+       Android adaptive-icon masks and PWA maskable icons never clip it. -->
+  <text x="512" y="531" fill="#e8556d"
+        font-family="Yu Gothic UI, Yu Gothic, Meiryo, MS Gothic, sans-serif"
+        font-size="250" font-weight="700" letter-spacing="6"
+        text-anchor="middle" dominant-baseline="central">文法</text>
+  <text x="512" y="701" fill="#97a3b8"
+        font-family="Segoe UI, Arial, sans-serif"
+        font-size="100" font-weight="700" letter-spacing="12"
+        text-anchor="middle" dominant-baseline="central">N4</text>
+</svg>

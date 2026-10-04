@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Source of truth for every app/PWA icon. Colours mirror the custom
+       properties in src/styles/global.css: bg #10141c, bg-raised #1a2130,
+       accent #e8556d, text-dim #97a3b8.
+       Rasterise to resources/icon.png (1024) and feed to @capacitor/assets. -->
+  <rect width="1024" height="1024" fill="#10141c"/>
+  <rect x="112" y="112" width="800" height="800" rx="176" fill="#1a2130" stroke="#2a3347" stroke-width="8"/>
+  <text x="512" y="512" fill="#e8556d"
+        font-family="Yu Gothic UI, Yu Gothic, Meiryo, MS Gothic, sans-serif"
+        font-size="330" font-weight="700" letter-spacing="8"
+        text-anchor="middle" dominant-baseline="central">文法</text>
+  <text x="512" y="742" fill="#97a3b8"
+        font-family="Segoe UI, Arial, sans-serif"
+        font-size="132" font-weight="700" letter-spacing="16"
+        text-anchor="middle" dominant-baseline="central">N4</text>
+</svg>
