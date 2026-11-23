@@ -5,6 +5,8 @@ import {
   MOCK_DURATION_SEC,
   MOCK_FORMATS,
   type MockFormatId,
+  MOCK_LEVELS,
+  type MockLevel,
   type MockPlanSection,
   type MockTestPlan,
   pickOnePerPoint,
@@ -58,7 +60,7 @@ function findSection<K extends MockPlanSection["kind"]>(
   return plan.sections.find((s): s is Extract<MockPlanSection, { kind: K }> => s.kind === kind);
 }
 
-const availableFormats = (Object.keys(MOCK_FORMATS) as MockFormatId[]).filter(isFormatAvailable);
+const availableFormats = (Object.keys(MOCK_FORMATS) as MockFormatId[]).filter((id) => isFormatAvailable(id));
 // Spread of seeds, not just 0..19, so the sweep isn't accidentally tied to
 // small-integer artifacts of mulberry32.
 const seeds = Array.from({ length: 20 }, (_, i) => i * 7 + 1);
@@ -326,8 +328,15 @@ describe("pickOnePerPoint", () => {
 });
 
 describe("MOCK_PAPERS / buildMockPaper", () => {
-  it("declares six papers with the expected ids and Japanese labels", () => {
-    expect(MOCK_PAPERS.map((p) => p.id)).toEqual([
+  it("declares six papers per level with the expected ids and labels", () => {
+    const n4 = MOCK_PAPERS.filter((p) => p.level === "N4");
+    const n5 = MOCK_PAPERS.filter((p) => p.level === "N5");
+    expect(n4.length).toBe(6);
+    expect(n5.length).toBe(6);
+    expect(n5.map((p) => p.id)).toEqual([1, 2, 3, 4, 5, 6].map((n) => `paper.n5.${n}`));
+    expect(n5.map((p) => p.label)).toEqual([1, 2, 3, 4, 5, 6].map((n) => `N5 模試${n}`));
+    expect(new Set(MOCK_PAPERS.map((p) => p.id)).size).toBe(MOCK_PAPERS.length);
+    expect(n4.map((p) => p.id)).toEqual([
       "paper.1",
       "paper.2",
       "paper.3",
@@ -335,25 +344,83 @@ describe("MOCK_PAPERS / buildMockPaper", () => {
       "paper.5",
       "paper.6",
     ]);
-    expect(MOCK_PAPERS.map((p) => p.label)).toEqual([
-      "模試1",
-      "模試2",
-      "模試3",
-      "模試4",
-      "模試5",
-      "模試6",
+    expect(n4.map((p) => p.label)).toEqual([
+      "N4 模試1",
+      "N4 模試2",
+      "N4 模試3",
+      "N4 模試4",
+      "N4 模試5",
+      "N4 模試6",
     ]);
   });
 
   it("builds every available paper deterministically and stamps its paperId", () => {
     for (const paper of MOCK_PAPERS) {
-      if (!isFormatAvailable(paper.formatId)) continue; // activates once phase-8 content lands
+      if (!isFormatAvailable(paper.formatId, paper.level)) continue; // activates once phase-8 content lands
       const a = buildMockPaper(paper);
       const b = buildMockPaper(paper);
       expect(a, paper.id).toEqual(b);
       expect(a.paperId).toBe(paper.id);
       expect(a.seed).toBe(paper.seed);
       expect(a.formatId).toBe(paper.formatId);
+      expect(a.level).toBe(paper.level);
     }
+  });
+});
+
+function allPlanSections(plan: MockTestPlan) {
+  return {
+    completion: plan.sections.flatMap((s) => (s.kind === "completion" ? s.questions : [])),
+    ordering: plan.sections.flatMap((s) => (s.kind === "ordering" ? s.questions : [])),
+    gaps: plan.sections.flatMap((s) => (s.kind === "passage" ? s.passage.gaps : [])),
+    passages: plan.sections.flatMap((s) => (s.kind === "passage" ? [s.passage] : [])),
+    vocab: plan.sections.flatMap((s) => (s.kind === "vocab" ? s.questions : [])),
+    readings: plan.sections.flatMap((s) => (s.kind === "reading" ? [s.passage] : [])),
+  };
+}
+
+describe.each(MOCK_LEVELS)("level: %s", (level: MockLevel) => {
+  describe.each(Object.keys(MOCK_FORMATS) as MockFormatId[])("format: %s", (formatId) => {
+    it("is available and builds a plan with the declared question count", () => {
+      expect(isFormatAvailable(formatId, level)).toBe(true);
+      for (const seed of seeds) {
+        const plan = buildMockTest(seed, formatId, level);
+        expect(plan.level).toBe(level);
+        expect(totalQuestions(plan), `seed ${seed}`).toBe(MOCK_FORMATS[formatId].questionCount);
+      }
+    });
+
+    it("is deterministic per (seed, format, level)", () => {
+      expect(buildMockTest(42, formatId, level)).toEqual(buildMockTest(42, formatId, level));
+    });
+
+    it("uses only items of its own level where items carry a level", () => {
+      for (const seed of seeds) {
+        const p = allPlanSections(buildMockTest(seed, formatId, level));
+        for (const v of p.vocab) expect(v.level, v.id).toBe(level);
+        for (const r of p.readings) expect(r.level, r.id).toBe(level);
+        for (const m of p.passages) expect(m.level, m.id).toBe(level);
+        if (level === "N5") {
+          for (const q of [...p.completion, ...p.ordering, ...p.gaps]) {
+            expect(q.grammarPointId.startsWith("n4."), q.id).toBe(false);
+          }
+        }
+      }
+    });
+  });
+});
+
+describe("N5 vs N4 papers", () => {
+  it("differ for the same seed and format", () => {
+    for (const formatId of Object.keys(MOCK_FORMATS) as MockFormatId[]) {
+      const n5 = buildMockTest(1, formatId, "N5");
+      const n4 = buildMockTest(1, formatId, "N4");
+      expect(allQuestionIds(n5), formatId).not.toEqual(allQuestionIds(n4));
+    }
+  });
+
+  it("defaults to N4", () => {
+    expect(buildMockTest(5).level).toBe("N4");
+    expect(buildMockTest(5)).toEqual(buildMockTest(5, "standard", "N4"));
   });
 });

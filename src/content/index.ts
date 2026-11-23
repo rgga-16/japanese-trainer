@@ -3,6 +3,7 @@
 
 import type { Exercise, GrammarPoint, MockPassage } from "./types";
 import { allPassages as basePassages } from "./mock/passages";
+import { n5Passages } from "./mock/passagesN5";
 import { passages2 } from "./mock/passages2";
 import { points as n5Points, exercises as n5Exercises } from "./grammar/n5/seed";
 import { points as n4Points, exercises as n4Exercises } from "./grammar/n4/seed";
@@ -64,7 +65,7 @@ export const allExercises: Exercise[] = [
 
 export { allVocab } from "./vocab";
 export { allTemplates } from "./templates";
-export const allPassages: MockPassage[] = [...basePassages, ...passages2];
+export const allPassages: MockPassage[] = [...basePassages, ...passages2, ...n5Passages];
 export { allReadingPassages } from "./reading";
 export { allVocabQuestions } from "./vocabq";
 export { allParticleItems, PARTICLE_SET } from "./drills/particles";
@@ -74,8 +75,11 @@ export { allTransitivityPairs } from "./drills/transitivity";
  * Hand-bumped whenever a content batch lands. Stamped onto MockResult so a
  * named preset paper whose questions have since shifted can be flagged in the
  * history table rather than silently compared against a different paper.
+ *
+ * 3: N5/N4 mock split (MockPassage.level) + 4 new N5 mock passages and 2 new
+ * N5 reading passages.
  */
-export const CONTENT_REVISION = 2;
+export const CONTENT_REVISION = 3;
 
 export const grammarPointById: ReadonlyMap<string, GrammarPoint> = new Map(
   allGrammarPoints.map((p) => [p.id, p])

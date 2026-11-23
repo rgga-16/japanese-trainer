@@ -395,3 +395,55 @@
     flex-wrap: wrap;
   }
 }
+
+/* ---------------------------------------------------------------------- */
+/* Level toggle + badge                                                   */
+/* ---------------------------------------------------------------------- */
+
+.mock-level-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-raised);
+}
+
+.mock-level-btn {
+  min-width: 4.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 1.1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.mock-level-btn + .mock-level-btn {
+  border-left: 1px solid var(--border);
+}
+
+.mock-level-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.mock-level-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.mock-result-level {
+  margin: 0;
+  color: var(--text-dim);
+  font-weight: 600;
+}

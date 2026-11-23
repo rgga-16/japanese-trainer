@@ -349,8 +349,8 @@ describe("templates", () => {
 
 // ---------------------------------------------------------------------------
 // Mock passages (populated: 10 hand-authored N4 passages — 4 in
-// src/content/mock/passages.ts + 6 in src/content/mock/passages2.ts — 5 gaps
-// each)
+// src/content/mock/passages.ts + 6 in src/content/mock/passages2.ts — plus 4
+// N5 passages in src/content/mock/passagesN5.ts; 5 gaps each)
 // ---------------------------------------------------------------------------
 
 describe("mock passages", () => {
@@ -361,6 +361,35 @@ describe("mock passages", () => {
   it("have unique ids", () => {
     const ids = allPassages.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('every passage has level "N4" or "N5"', () => {
+    for (const p of allPassages) {
+      expect(["N4", "N5"], `level of "${p.id}"`).toContain(p.level);
+    }
+  });
+
+  it("every gap of an N5 passage targets an n5.* grammar point", () => {
+    for (const p of allPassages.filter((x) => x.level === "N5")) {
+      for (const g of p.gaps) {
+        expect(g.grammarPointId.startsWith("n5."), `"${g.id}" -> "${g.grammarPointId}"`).toBe(true);
+      }
+    }
+  });
+
+  it("has at least 3 passages per level", () => {
+    for (const level of ["N4", "N5"] as const) {
+      const count = allPassages.filter((p) => p.level === level).length;
+      expect(count, `${level} passages`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("every gap's grammarPointId exists in the grammar lookup map", () => {
+    for (const p of allPassages) {
+      for (const g of p.gaps) {
+        expect(grammarPointById.has(g.grammarPointId), `"${g.id}" -> "${g.grammarPointId}"`).toBe(true);
+      }
+    }
   });
 
   it("have exactly 5 gaps each (the mock's 問題3 sizing depends on it)", () => {

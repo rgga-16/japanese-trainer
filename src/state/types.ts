@@ -78,7 +78,9 @@ export interface MockResult {
   wrongQuestionIds: string[];
   /** Additive; absent on pre-v2 records (backfilled to "standard" when max === 25). */
   formatId?: string;
-  /** Set when the attempt was a named preset paper ("paper.1" … "paper.6"). */
+  /** Mock level; absent on records saved before N5 mocks existed (treat as "N4"). */
+  level?: "N5" | "N4";
+  /** Set when the attempt was a named preset paper ("paper.1" … "paper.6", "paper.n5.1" …). */
   paperId?: string;
   /** CONTENT_REVISION at the time of the attempt; flags preset-paper drift. */
   contentRevision?: number;

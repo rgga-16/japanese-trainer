@@ -1,6 +1,7 @@
 // Derived statistics — computed from history/srs/mockResults, never stored.
 
 import { allGrammarPoints, grammarPointById } from "../content";
+import { mockResultLevel } from "./mockLabels";
 import type { StoredData } from "./types";
 
 export interface PointAccuracy {
@@ -66,7 +67,8 @@ export function readiness(data: StoredData): number {
       : null,
   );
 
-  const recentMocks = data.mockResults.slice(-5);
+  // N4 readiness: N5 mock scores would inflate it, so count N4 attempts only.
+  const recentMocks = data.mockResults.filter((m) => mockResultLevel(m) === "N4").slice(-5);
   parts.push(
     recentMocks.length > 0
       ? {

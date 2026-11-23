@@ -308,3 +308,22 @@ describe("migrations[1] (v1 -> v2 mockResults)", () => {
     expect(data.mockResults[0].formatId).toBe("standard");
   });
 });
+
+describe("MockResult.level", () => {
+  const base = { at: "2026-01-01T00:00:00.000Z", score: 5, max: 10, perSection: {}, durationSec: 60, wrongQuestionIds: [] };
+
+  it("loads a legacy record without level, leaving it undefined", () => {
+    const data = parseStoredJson(JSON.stringify({ version: 2, mockResults: [base] }));
+    expect(data.mockResults[0].level).toBeUndefined();
+  });
+
+  it("round-trips a valid level and drops an invalid one", () => {
+    const data = parseStoredJson(
+      JSON.stringify({
+        version: 2,
+        mockResults: [{ ...base, level: "N5" }, { ...base, level: "N4" }, { ...base, level: "N3" }],
+      }),
+    );
+    expect(data.mockResults.map((r) => r.level)).toEqual(["N5", "N4", undefined]);
+  });
+});

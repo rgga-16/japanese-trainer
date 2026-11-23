@@ -7,5 +7,6 @@
 
 import type { ReadingPassage } from "../types";
 import { readingBatch1 } from "./batch1";
+import { readingBatch2 } from "./batch2";
 
-export const allReadingPassages: ReadingPassage[] = [...readingBatch1];
+export const allReadingPassages: ReadingPassage[] = [...readingBatch1, ...readingBatch2];

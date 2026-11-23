@@ -1,36 +1,14 @@
 import { Link } from "react-router-dom";
 import { CONTENT_REVISION } from "../content";
-import {
-  MOCK_FORMATS,
-  MOCK_SECTION_LABELS,
-  MOCK_SECTION_ORDER,
-  type MockFormatId,
-} from "../engine/mockBuilder";
-import { MOCK_PAPERS } from "../engine/mockPapers";
+import { MOCK_SECTION_LABELS, MOCK_SECTION_ORDER } from "../engine/mockBuilder";
 import { useAppState } from "../state/AppStateContext";
+import { mockFormatLabel, mockResultLevel } from "../state/mockLabels";
 import type { MockResult } from "../state/types";
 
 function formatDuration(totalSec: number): string {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m}:${s < 10 ? "0" : ""}${s}`;
-}
-
-function isMockFormatId(id: string): id is MockFormatId {
-  return id === "short" || id === "standard" || id === "full";
-}
-
-/** Paper label ("模試1") when the attempt used a named paper, else the format
- * label ("Standard"), else "—" for pre-v2 records that carry neither field. */
-function formatLabelFor(r: MockResult): string {
-  if (r.paperId) {
-    const paper = MOCK_PAPERS.find((p) => p.id === r.paperId);
-    if (paper) return paper.label;
-  }
-  if (r.formatId && isMockFormatId(r.formatId)) {
-    return MOCK_FORMATS[r.formatId].label;
-  }
-  return "—";
 }
 
 function isStale(r: MockResult): boolean {
@@ -58,6 +36,7 @@ export default function MockResults() {
           <thead>
             <tr>
               <th>Date</th>
+              <th>Level</th>
               <th>Format</th>
               <th>Score</th>
               {MOCK_SECTION_ORDER.map((key) => (
@@ -76,8 +55,9 @@ export default function MockResults() {
                   className={r.paperId ? "mock-table-row-paper" : undefined}
                 >
                   <td>{new Date(r.at).toLocaleString()}</td>
+                  <td>{mockResultLevel(r)}</td>
                   <td>
-                    {formatLabelFor(r)}
+                    {mockFormatLabel(r)}
                     {stale && (
                       <span
                         className="mock-table-stale"

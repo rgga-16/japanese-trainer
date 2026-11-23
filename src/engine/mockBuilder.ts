@@ -36,6 +36,10 @@ import { hashSeed, mulberry32, type Rng, shuffle } from "./rng";
 
 export type MockFormatId = "short" | "standard" | "full";
 
+/** Which JLPT level a mock test is built for. N5 papers are pure N5; N4 papers are N4-weighted. */
+export type MockLevel = "N5" | "N4";
+export const MOCK_LEVELS: MockLevel[] = ["N5", "N4"];
+
 /** Discriminated: loose-question sections carry `count`, container sections carry `passages`. */
 export type MockSectionSpec =
   | { kind: "vocab"; count: number }
@@ -132,10 +136,19 @@ export type MockPlanSection =
 export interface MockTestPlan {
   seed: number;
   formatId: MockFormatId;
+  level: MockLevel;
   /** Set by `buildMockPaper` when the plan is a named preset paper. */
   paperId?: string;
   durationSec: number;
   sections: MockPlanSection[]; // ordered
+}
+
+/**
+ * RNG namespace for a decision. N4 keeps the bare key; N5 is prefixed so the
+ * same seed yields an uncorrelated N5 paper.
+ */
+function ns(level: MockLevel, key: string): string {
+  return level === "N4" ? key : `${level}:${key}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -230,10 +243,11 @@ function selectCompletion(
   count: number,
   n4Share: number,
   seed: number,
-  formatId: MockFormatId
+  formatId: MockFormatId,
+  level: MockLevel
 ): McqExercise[] {
-  const reps = pickOnePerPoint(pool, seed, "completion");
-  const rng = mulberry32(seed ^ hashSeed("completion.split"));
+  const reps = pickOnePerPoint(pool, seed, ns(level, "completion"));
+  const rng = mulberry32(seed ^ hashSeed(ns(level, "completion.split")));
   const n4Reps = shuffle(
     reps.filter((ex) => levelOfPointId(ex.grammarPointId) === "N4"),
     rng
@@ -252,7 +266,8 @@ function selectCompletion(
   const selected = [...n4Reps.slice(0, takeN4), ...n5Reps.slice(0, takeN5)];
 
   let shortfall = count - selected.length;
-  if (shortfall > 0) {
+  // N5 papers must stay pure N5, so only N4 papers may backfill across levels.
+  if (shortfall > 0 && level === "N4") {
     const usedIds = new Set(selected.map((ex) => ex.id));
     const remaining = shuffle(
       reps.filter((ex) => !usedIds.has(ex.id)),
@@ -264,7 +279,7 @@ function selectCompletion(
 
   if (shortfall > 0) {
     throw new Error(
-      `buildMockTest: format "${formatId}" completion section needs ${count} bank MCQ ` +
+      `buildMockTest: ${level} format "${formatId}" completion section needs ${count} bank MCQ ` +
         `exercises (one per grammar point) but only ${selected.length} are available.`
     );
   }
@@ -276,28 +291,47 @@ function selectOrdering(
   pool: OrderingExercise[],
   count: number,
   seed: number,
-  formatId: MockFormatId
+  formatId: MockFormatId,
+  level: MockLevel
 ): OrderingExercise[] {
-  const reps = shuffle(pickOnePerPoint(pool, seed, "ordering"), mulberry32(seed ^ hashSeed("ordering.split")));
-  if (reps.length < count) {
+  const reps = pickOnePerPoint(pool, seed, ns(level, "ordering"));
+  const rng = mulberry32(seed ^ hashSeed(ns(level, "ordering.split")));
+  const primary = shuffle(
+    reps.filter((ex) => levelOfPointId(ex.grammarPointId) === level),
+    rng
+  );
+  // N4 papers fill any shortfall from N5 points; N5 papers never do.
+  const filler =
+    level === "N4"
+      ? shuffle(
+          reps.filter((ex) => levelOfPointId(ex.grammarPointId) !== level),
+          rng
+        )
+      : [];
+  const all = [...primary, ...filler];
+  if (all.length < count) {
     throw new Error(
-      `buildMockTest: format "${formatId}" ordering section needs ${count} bank ordering ` +
-        `exercises (one per grammar point) but only ${reps.length} are available.`
+      `buildMockTest: ${level} format "${formatId}" ordering section needs ${count} bank ordering ` +
+        `exercises (one per grammar point) but only ${all.length} are available.`
     );
   }
-  return reps.slice(0, count);
+  return all.slice(0, count);
 }
 
 function selectVocab(
   pool: VocabQuestion[],
   count: number,
   seed: number,
-  formatId: MockFormatId
+  formatId: MockFormatId,
+  level: MockLevel
 ): VocabQuestion[] {
-  const shuffled = shuffle([...pool].sort(compareById), mulberry32(seed ^ hashSeed("vocab.select")));
+  const shuffled = shuffle(
+    [...pool].sort(compareById),
+    mulberry32(seed ^ hashSeed(ns(level, "vocab.select")))
+  );
   if (shuffled.length < count) {
     throw new Error(
-      `buildMockTest: format "${formatId}" vocab section needs ${count} vocab questions ` +
+      `buildMockTest: ${level} format "${formatId}" vocab section needs ${count} vocab questions ` +
         `but only ${shuffled.length} are available in the content bank.`
     );
   }
@@ -326,76 +360,101 @@ function pickDistinct<T extends { id: string }>(
  * vocab questions, passages, or reading passages than are currently
  * authored) instead of letting `buildMockTest` throw.
  */
-export function isFormatAvailable(formatId: MockFormatId): boolean {
+export function isFormatAvailable(formatId: MockFormatId, level: MockLevel = "N4"): boolean {
   const format = MOCK_FORMATS[formatId];
-  const passageGapIds = new Set(allPassages.flatMap((p) => p.gaps.map((g) => g.id)));
-  const mcqPool = allExercises.filter(
-    (ex): ex is McqExercise =>
-      ex.kind === "mcq" && ex.source === "bank" && !passageGapIds.has(ex.id)
-  );
-  const orderingPool = allExercises.filter(
-    (ex): ex is OrderingExercise => ex.kind === "ordering" && ex.source === "bank"
-  );
+  const { mcqPool, orderingPool, vocab, passages, readings } = poolsFor(level);
   const distinctCompletionPoints = new Set(mcqPool.map((ex) => ex.grammarPointId)).size;
   const distinctOrderingPoints = new Set(orderingPool.map((ex) => ex.grammarPointId)).size;
 
   return format.sections.every((spec) => {
     switch (spec.kind) {
       case "vocab":
-        return allVocabQuestions.length >= spec.count;
+        return vocab.length >= spec.count;
       case "completion":
         return distinctCompletionPoints >= spec.count;
       case "ordering":
         return distinctOrderingPoints >= spec.count;
       case "passage":
-        return allPassages.length >= spec.passages;
+        return passages.length >= spec.passages;
       case "reading":
-        return allReadingPassages.length >= spec.passages;
+        return readings.length >= spec.passages;
       default:
         return true;
     }
   });
 }
 
-/** Build a deterministic mock test plan for a given numeric seed and format ("standard" by default). */
-export function buildMockTest(seed: number, formatId: MockFormatId = "standard"): MockTestPlan {
-  const format = MOCK_FORMATS[formatId];
-
+/**
+ * Level-scoped pools. Completion/ordering pools are returned UNFILTERED by
+ * point level for N4 (which may backfill from N5) and filtered to n5.* for N5.
+ */
+function poolsFor(level: MockLevel) {
+  const levelPassages = allPassages.filter((p) => p.level === level);
   const passageGapIds = new Set(allPassages.flatMap((p) => p.gaps.map((g) => g.id)));
-  const mcqPool = allExercises.filter(
-    (ex): ex is McqExercise =>
-      ex.kind === "mcq" && ex.source === "bank" && !passageGapIds.has(ex.id)
+  const byPointLevel = <T extends { grammarPointId: string }>(list: T[]): T[] =>
+    level === "N4" ? list : list.filter((ex) => levelOfPointId(ex.grammarPointId) === level);
+  const mcqPool = byPointLevel(
+    allExercises.filter(
+      (ex): ex is McqExercise =>
+        ex.kind === "mcq" && ex.source === "bank" && !passageGapIds.has(ex.id)
+    )
   );
-  const orderingPool = allExercises.filter(
-    (ex): ex is OrderingExercise => ex.kind === "ordering" && ex.source === "bank"
+  const orderingPool = byPointLevel(
+    allExercises.filter(
+      (ex): ex is OrderingExercise => ex.kind === "ordering" && ex.source === "bank"
+    )
   );
+  return {
+    mcqPool,
+    orderingPool,
+    vocab: allVocabQuestions.filter((q) => q.level === level),
+    passages: levelPassages,
+    readings: allReadingPassages.filter((p) => p.level === level),
+  };
+}
+
+/** Build a deterministic mock test plan for a given numeric seed and format ("standard" by default). */
+export function buildMockTest(
+  seed: number,
+  formatId: MockFormatId = "standard",
+  level: MockLevel = "N4"
+): MockTestPlan {
+  const format = MOCK_FORMATS[formatId];
+  const { mcqPool, orderingPool, vocab, passages, readings } = poolsFor(level);
 
   const sections: MockPlanSection[] = [];
 
   for (const spec of format.sections) {
     switch (spec.kind) {
       case "vocab": {
-        const picked = selectVocab(allVocabQuestions, spec.count, seed, formatId);
+        const picked = selectVocab(vocab, spec.count, seed, formatId, level);
         const questions = picked.map((q) =>
-          shuffleChoices(q, mulberry32(seed ^ hashSeed(`vocab.shuffle:${q.id}`)))
+          shuffleChoices(q, mulberry32(seed ^ hashSeed(ns(level, `vocab.shuffle:${q.id}`))))
         );
         sections.push({ kind: "vocab", questions });
         break;
       }
 
       case "completion": {
-        const picked = selectCompletion(mcqPool, spec.count, spec.n4Share ?? N4_SHARE, seed, formatId);
-        const ordered = shuffle(picked, mulberry32(seed ^ hashSeed("completion.order")));
+        const picked = selectCompletion(
+          mcqPool,
+          spec.count,
+          level === "N5" ? 0 : (spec.n4Share ?? N4_SHARE),
+          seed,
+          formatId,
+          level
+        );
+        const ordered = shuffle(picked, mulberry32(seed ^ hashSeed(ns(level, "completion.order"))));
         const questions = ordered.map((q) =>
-          shuffleChoices(q, mulberry32(seed ^ hashSeed(`completion.shuffle:${q.id}`)))
+          shuffleChoices(q, mulberry32(seed ^ hashSeed(ns(level, `completion.shuffle:${q.id}`))))
         );
         sections.push({ kind: "completion", questions });
         break;
       }
 
       case "ordering": {
-        const picked = selectOrdering(orderingPool, spec.count, seed, formatId);
-        const ordered = shuffle(picked, mulberry32(seed ^ hashSeed("ordering.order")));
+        const picked = selectOrdering(orderingPool, spec.count, seed, formatId, level);
+        const ordered = shuffle(picked, mulberry32(seed ^ hashSeed(ns(level, "ordering.order"))));
         // `starIndex` is a SEGMENT index, so display order can't affect grading;
         // it's still computed here (not in the view) so a named preset paper
         // shows a stable-but-seeded segment order instead of one derived only
@@ -403,7 +462,7 @@ export function buildMockTest(seed: number, formatId: MockFormatId = "standard")
         const displayOrders = ordered.map((q) =>
           shuffle(
             q.segments.map((_, i) => i),
-            mulberry32(seed ^ hashSeed(`ordering.display:${q.id}`))
+            mulberry32(seed ^ hashSeed(ns(level, `ordering.display:${q.id}`)))
           )
         );
         sections.push({ kind: "ordering", questions: ordered, displayOrders });
@@ -411,16 +470,16 @@ export function buildMockTest(seed: number, formatId: MockFormatId = "standard")
       }
 
       case "passage": {
-        if (allPassages.length < spec.passages) {
+        if (passages.length < spec.passages) {
           throw new Error(
-            `buildMockTest: format "${formatId}" passage section needs ${spec.passages} mock ` +
-              `passage(s) but only ${allPassages.length} are available in the content bank.`
+            `buildMockTest: ${level} format "${formatId}" passage section needs ${spec.passages} mock ` +
+              `passage(s) but only ${passages.length} are available in the content bank.`
           );
         }
-        const chosen = pickDistinct(allPassages, spec.passages, seed, "passage.select");
+        const chosen = pickDistinct(passages, spec.passages, seed, ns(level, "passage.select"));
         for (const p of chosen) {
           const gaps = p.gaps.map((g) =>
-            shuffleChoices(g, mulberry32(seed ^ hashSeed(`passage.gap:${g.id}`)))
+            shuffleChoices(g, mulberry32(seed ^ hashSeed(ns(level, `passage.gap:${g.id}`))))
           );
           sections.push({ kind: "passage", passage: { ...p, gaps } });
         }
@@ -428,16 +487,16 @@ export function buildMockTest(seed: number, formatId: MockFormatId = "standard")
       }
 
       case "reading": {
-        if (allReadingPassages.length < spec.passages) {
+        if (readings.length < spec.passages) {
           throw new Error(
-            `buildMockTest: format "${formatId}" reading section needs ${spec.passages} reading ` +
-              `passage(s) but only ${allReadingPassages.length} are available in the content bank.`
+            `buildMockTest: ${level} format "${formatId}" reading section needs ${spec.passages} reading ` +
+              `passage(s) but only ${readings.length} are available in the content bank.`
           );
         }
-        const chosen = pickDistinct(allReadingPassages, spec.passages, seed, "reading.select");
+        const chosen = pickDistinct(readings, spec.passages, seed, ns(level, "reading.select"));
         for (const p of chosen) {
           const questions: ReadingQuestion[] = p.questions.map((q) =>
-            shuffleChoices(q, mulberry32(seed ^ hashSeed(`reading.q:${q.id}`)))
+            shuffleChoices(q, mulberry32(seed ^ hashSeed(ns(level, `reading.q:${q.id}`))))
           );
           sections.push({ kind: "reading", passage: { ...p, questions } });
         }
@@ -451,5 +510,5 @@ export function buildMockTest(seed: number, formatId: MockFormatId = "standard")
     }
   }
 
-  return { seed, formatId, durationSec: format.durationSec, sections };
+  return { seed, formatId, level, durationSec: format.durationSec, sections };
 }

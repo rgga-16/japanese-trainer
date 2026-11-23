@@ -15,14 +15,17 @@ import { stripFurigana } from "../engine/furigana";
 import {
   isFormatAvailable,
   MOCK_FORMATS,
+  MOCK_LEVELS,
   MOCK_SECTION_LABELS,
   MOCK_SECTION_ORDER,
   type MockFormatId,
+  type MockLevel,
   type MockTestPlan,
   buildMockTest,
 } from "../engine/mockBuilder";
 import { buildMockPaper, MOCK_PAPERS, type MockPaper } from "../engine/mockPapers";
 import { useAppState } from "../state/AppStateContext";
+import { mockResultLevel } from "../state/mockLabels";
 import {
   META_READING_POINT_ID,
   META_VOCAB_POINT_ID,
@@ -406,6 +409,7 @@ function ReadingQuestionCard({
 
 export default function MockTest() {
   const { data, recordMock, recordResults } = useAppState();
+  const [level, setLevel] = useState<MockLevel>("N4");
   const [phase, setPhase] = useState<"intro" | "test" | "result">("intro");
   const [plan, setPlan] = useState<MockTestPlan | null>(null);
   const [current, setCurrent] = useState(0);
@@ -466,6 +470,7 @@ export default function MockTest() {
       durationSec,
       wrongQuestionIds,
       formatId: plan.formatId,
+      level: plan.level,
       paperId: plan.paperId,
       contentRevision: CONTENT_REVISION,
     });
@@ -508,7 +513,7 @@ export default function MockTest() {
 
   function startFormat(formatId: MockFormatId) {
     try {
-      startWithPlan(buildMockTest(Date.now() >>> 0, formatId));
+      startWithPlan(buildMockTest(Date.now() >>> 0, formatId, level));
     } catch (err) {
       setStartError(
         err instanceof Error
@@ -558,19 +563,47 @@ export default function MockTest() {
   }
 
   if (phase === "intro") {
+    const levelResults = data.mockResults.filter(
+      (r) => mockResultLevel(r) === level,
+    );
     const bestResult =
-      data.mockResults.length > 0
-        ? data.mockResults.reduce((best, r) =>
+      levelResults.length > 0
+        ? levelResults.reduce((best, r) =>
             r.score / r.max > best.score / best.max ? r : best,
           )
         : null;
+    const levelPapers = MOCK_PAPERS.filter((p) => p.level === level);
 
     return (
       <div className="mock-intro">
-        <h1>模擬テスト</h1>
+        <h1>模擬テスト · {level}</h1>
+        {/* biome-ignore lint/a11y/useSemanticElements: a segmented toggle, not a form fieldset */}
+        <div
+          className="mock-level-toggle"
+          role="group"
+          aria-label="Mock test level"
+        >
+          {MOCK_LEVELS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              className="mock-level-btn"
+              aria-pressed={level === l}
+              onClick={() => {
+                setLevel(l);
+                setStartError(null);
+              }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
         <div className="card mock-rules-card">
           <ul>
-            <li>Choose a format below, or a named paper (模試1〜6)</li>
+            <li>
+              {level} mock test: choose a format below, or a named paper ({level}{" "}
+              模試1〜6)
+            </li>
             <li>Auto-submits when the timer hits 0:00</li>
             <li>No feedback until you finish</li>
             <li>
@@ -582,7 +615,7 @@ export default function MockTest() {
         </div>
         {bestResult !== null && (
           <p className="mock-past-best">
-            Your best score so far: {bestResult.score}/{bestResult.max}
+            Your best {level} score so far: {bestResult.score}/{bestResult.max}
           </p>
         )}
         {startError && <div className="card mock-start-error">{startError}</div>}
@@ -592,7 +625,7 @@ export default function MockTest() {
           <div className="mock-format-grid">
             {FORMAT_ORDER.map((id) => {
               const format = MOCK_FORMATS[id];
-              const available = isFormatAvailable(id);
+              const available = isFormatAvailable(id, level);
               return (
                 <button
                   key={id}
@@ -623,8 +656,8 @@ export default function MockTest() {
         <section className="mock-picker-section">
           <h2>Named papers</h2>
           <div className="mock-paper-grid">
-            {MOCK_PAPERS.map((paper) => {
-              const available = isFormatAvailable(paper.formatId);
+            {levelPapers.map((paper) => {
+              const available = isFormatAvailable(paper.formatId, paper.level);
               return (
                 <button
                   key={paper.id}
@@ -671,6 +704,7 @@ export default function MockTest() {
       <div className="mock-test">
         <div className="mock-test-header">
           <div className="mock-section-label">
+            <span className="mock-level-badge">{plan.level}</span>
             {MOCK_SECTION_LABELS[item.section]}
           </div>
           <Countdown
@@ -840,6 +874,12 @@ export default function MockTest() {
         <h1>
           {score} / {questions.length}
         </h1>
+        <p className="mock-result-level">
+          <span className="mock-level-badge">{plan.level}</span>
+          {plan.paperId
+            ? (MOCK_PAPERS.find((p) => p.id === plan.paperId)?.label ?? "")
+            : MOCK_FORMATS[plan.formatId].label}
+        </p>
         <table className="mock-breakdown-table">
           <thead>
             <tr>
@@ -861,7 +901,8 @@ export default function MockTest() {
           </tbody>
         </table>
         <p className="mock-guidance">
-          The real N4 grammar section needs roughly 50% — aim for 70%+ here.
+          The real {plan.level} grammar/reading section needs roughly 50% — aim for
+          70%+ here.
         </p>
 
         <h2>Review</h2>

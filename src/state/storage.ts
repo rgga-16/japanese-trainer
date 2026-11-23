@@ -133,6 +133,7 @@ function withDefaults(raw: Record<string, unknown>): StoredData {
     };
     if (typeof rec.formatId === "string") result.formatId = rec.formatId;
     if (typeof rec.paperId === "string") result.paperId = rec.paperId;
+    if (rec.level === "N5" || rec.level === "N4") result.level = rec.level;
     if (Number.isFinite(rec.contentRevision)) {
       result.contentRevision = rec.contentRevision as number;
     }

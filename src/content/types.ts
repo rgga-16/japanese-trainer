@@ -208,6 +208,8 @@ export interface MockPassage {
   /** "passage.<slug>" — unique. */
   id: string;
   title: string;
+  /** Which mock test this passage belongs to; every gap's grammar point is of this level. */
+  level: Level;
   /** Paragraphs in furigana notation; gap positions marked ［1］, ［2］ … */
   paragraphsJa: string[];
   /** One MCQ per numbered gap, in order. EXACTLY 5 gaps; the mock's 問題3 sizing depends on it. */
