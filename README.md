@@ -76,6 +76,20 @@ npx @capacitor/assets@3 generate --ios --android \
 
 The generator is intentionally *not* a devDependency — it pulls ~300 packages and is only needed when the artwork changes. The PWA icons in `public/` (`pwa-*.png`, `apple-touch-icon-180x180.png`, `favicon.svg`) are generated from the same sources.
 
+## Windows desktop (.exe)
+
+A third build target wraps the `build:native` bundle in Electron (`desktop/`, its own `package.json`, no runtime dependencies). The bundle is served over an `app://` scheme, so it behaves like the Capacitor build: relative paths, hash routing, no service worker.
+
+```bash
+npm --prefix desktop install   # one time
+npm run desktop:start          # build and run in a window
+npm run desktop                # build the installer -> desktop/release/JLPT-N4-Trainer-Setup-<version>.exe
+```
+
+- The installer is unsigned, so Windows SmartScreen shows "More info" then "Run anyway".
+- Progress lives in `%APPDATA%\JLPT N4 Trainer`, so installing a newer version keeps it.
+- To release: bump `version` in both `package.json` and `desktop/package.json`, rebuild, then `gh release create vX.Y.Z <exe> --title "vX.Y"`. The exe is a release asset, never committed.
+
 ## Project structure
 
 ```

@@ -10,7 +10,9 @@
 		"includes": [
 			"src/**/*.ts",
 			"src/**/*.tsx",
-			"src/**/*.css"
+			"src/**/*.css",
+			"desktop/main.cjs",
+			"desktop/scripts/**"
 		]
 	},
 	"formatter": {

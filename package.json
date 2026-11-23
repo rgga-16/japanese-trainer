@@ -13,8 +13,10 @@
     "ios": "npm run sync && cap open ios",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "biome lint src",
-    "lint:fix": "biome lint --write src"
+    "lint": "biome lint src desktop/main.cjs desktop/scripts",
+    "lint:fix": "biome lint --write src desktop/main.cjs desktop/scripts",
+    "desktop": "npm --prefix desktop run dist:win",
+    "desktop:start": "npm --prefix desktop start"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
